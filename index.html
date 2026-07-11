@@ -255,7 +255,7 @@
       { us: 'back loop only', es: 'solo hebra trasera', abUs: 'blo', abEs: 'sht', desc: 'Tejer tomando solo la parte de atrás del punto.' }
     ];
 
-    // Datos de equivalencias de lanas y agujas (Punto 4)
+    // Datos de equivalencias de lanas y agujas
     const YARN_WEIGHTS = [
       { number: '0', category: 'Lace', name: 'Superfina / Encaje', mm: '1.5 - 2.25 mm', us: 'US 000 a 1' },
       { number: '1', category: 'Super Fine', name: 'Fingering / Calcetines', mm: '2.25 - 3.25 mm', us: 'US 1 a 3' },
@@ -414,7 +414,7 @@ Sew a nice wooden button to the end to close it!`,
       stretchIntervalMins = parseInt(localStorage.getItem('tejefacil_stretch_interval') || '30', 10);
     }
 
-    // --- CONTROL DE MODO NOCHE (Punto 2) ---
+    // --- CONTROL DE MODO NOCHE ---
     function toggleDarkMode() {
       isDarkMode = !isDarkMode;
       applyTheme();
@@ -442,7 +442,7 @@ Sew a nice wooden button to the end to close it!`,
       }
     }
 
-    // --- TEMPORIZADOR DE SALUD Y ESTIRAMIENTO (Punto 3) ---
+    // --- TEMPORIZADOR DE SALUD Y ESTIRAMIENTO ---
     function toggleStretchSettings() {
       const panel = document.getElementById('stretch-settings-panel');
       if (panel) {
@@ -527,7 +527,7 @@ Sew a nice wooden button to the end to close it!`,
     // --- DETECTOR AUTOMÁTICO DE IDIOMA ---
     function autoDetectLanguage(text) {
       const engKeywords = ['sc', 'ch', 'dc', 'hdc', 'inc', 'dec', 'st', 'sts', 'sl st', 'mr', 'rnd', 'rnds', 'row', 'turn', 'magic ring'];
-      const espKeywords = ['pb', 'cad', 'pa', 'mpa', 'aum', 'dism', 'pt', 'pts', 'pr', 'pe', 'am', 'vta', 'vtas', 'fila', 'anillo mágico', 'vuelta'];
+      const espKeywords = ['pb', 'cad', 'pa', 'mpa', 'aum', 'dism', 'pt', 'pts', 'pr', 'pe', 'am', 'vta', 'vuelta', 'fila', 'anillo mágico', 'vuelta'];
       
       let engCount = 0;
       let espCount = 0;
@@ -550,36 +550,50 @@ Sew a nice wooden button to the end to close it!`,
     }
 
     // --- SINTETIZADOR DE SECUENCIAS ---
+    // Actualizado: Ahora separa inteligentemente por puntos seguidos, ignorando decimales y abreviaciones cortas
     function parsePatternToRows(rawText) {
       const lines = rawText.split('\n').map(l => l.trim()).filter(l => l.length > 0);
       const processedRows = [];
 
       lines.forEach(line => {
-        const rangeEspRegex = /^(vta|vuelta|fila|v)\s+(\d+)\s+a\s+(\d+)\s*:(.*)$/i;
-        const rangeEngRegex = /^(row|rnd|round|rnds)\s+(\d+)\s+to\s+(\d+)\s*:(.*)$/i;
+        // Explicación Regex: Corta en puntos que NO estén seguidos por un número (ej: 3.5),
+        // que estén seguidos de espacios y donde el siguiente carácter empiece por mayúscula,
+        // número, o signos de apertura. Así evitamos romper abreviaciones tipo "pb. en" pero sí rompemos "pb. Vta 2:".
+        const sentences = line.split(/\.(?!\d)\s+(?=[A-ZÁÉÍÓÚÑ0-9¿([])/).map(s => s.trim()).filter(s => s.length > 0);
 
-        let match = line.match(rangeEspRegex);
-        let isEsp = true;
-        
-        if (!match) {
-          match = line.match(rangeEngRegex);
-          isEsp = false;
-        }
-
-        if (match) {
-          const type = match[1];
-          const startNum = parseInt(match[2], 10);
-          const endNum = parseInt(match[3], 10);
-          const action = match[4].trim();
-
-          if (startNum < endNum && (endNum - startNum) < 100) {
-            for (let i = startNum; i <= endNum; i++) {
-              processedRows.push(`${type} ${i}: ${action} ${isEsp ? `(vuelve ${i - startNum + 1} de ${endNum - startNum + 1})` : `(round ${i - startNum + 1} of ${endNum - startNum + 1})`}`);
-            }
-            return;
+        sentences.forEach(sentence => {
+          let cleanSentence = sentence;
+          // Devolver el punto al final de la instrucción si se lo hemos quitado al dividir
+          if (!/[.!?]$/.test(cleanSentence)) {
+            cleanSentence += '.';
           }
-        }
-        processedRows.push(line);
+
+          const rangeEspRegex = /^(vta|vuelta|fila|v)\s+(\d+)\s+a\s+(\d+)\s*:(.*)$/i;
+          const rangeEngRegex = /^(row|rnd|round|rnds)\s+(\d+)\s+to\s+(\d+)\s*:(.*)$/i;
+
+          let match = cleanSentence.match(rangeEspRegex);
+          let isEsp = true;
+          
+          if (!match) {
+            match = cleanSentence.match(rangeEngRegex);
+            isEsp = false;
+          }
+
+          if (match) {
+            const type = match[1];
+            const startNum = parseInt(match[2], 10);
+            const endNum = parseInt(match[3], 10);
+            const action = match[4].trim();
+
+            if (startNum < endNum && (endNum - startNum) < 100) {
+              for (let i = startNum; i <= endNum; i++) {
+                processedRows.push(`${type} ${i}: ${action} ${isEsp ? `(vuelve ${i - startNum + 1} de ${endNum - startNum + 1})` : `(round ${i - startNum + 1} of ${endNum - startNum + 1})`}`);
+              }
+              return;
+            }
+          }
+          processedRows.push(cleanSentence);
+        });
       });
 
       return processedRows;
@@ -1028,7 +1042,7 @@ Sew a nice wooden button to the end to close it!`,
             </div>
           </div>
 
-          <!-- SUB-CONTADOR AUXILIAR DE PUNTOS (Punto 1) -->
+          <!-- SUB-CONTADOR AUXILIAR DE PUNTOS -->
           <div class="bg-indigo-50 dark:bg-indigo-950/20 p-2.5 rounded-xl border border-indigo-100/80 dark:border-indigo-900/40 flex items-center justify-between transition-colors">
             <div class="min-w-0 pr-2">
               <span class="text-[11px] font-bold text-indigo-700 dark:text-indigo-400 uppercase tracking-wide block">Contador de Puntos Auxiliar</span>
@@ -1134,7 +1148,7 @@ Sew a nice wooden button to the end to close it!`,
       if (newIndex >= 0 && newIndex <= proj.parsedRows.length) {
         proj.currentRowIndex = newIndex;
         
-        // REINICIAR CONTADOR DE PUNTOS AUXILIAR (Punto 1) al cambiar de vuelta
+        // REINICIAR CONTADOR DE PUNTOS AUXILIAR al cambiar de vuelta
         proj.currentStitchCount = 0;
         
         saveToStorage();
@@ -1151,7 +1165,7 @@ Sew a nice wooden button to the end to close it!`,
       }
     }
 
-    // Controles de puntos auxiliares (Punto 1)
+    // Controles de puntos auxiliares
     function changeStitch(step) {
       const proj = projects.find(p => p.id === activeProjectId);
       if (!proj) return;
@@ -1170,6 +1184,7 @@ Sew a nice wooden button to the end to close it!`,
       }
     }
 
+    // Resetear contador de puntos a 0
     function resetStitchCount() {
       const proj = projects.find(p => p.id === activeProjectId);
       if (proj) {
@@ -1280,7 +1295,7 @@ Sew a nice wooden button to the end to close it!`,
     }
 
 
-    // --- VISTA 4: GLOSARIO E INFO (DICCIONARIO + CALCULADORA) (Punto 4) ---
+    // --- VISTA 4: GLOSARIO E INFO (DICCIONARIO + CALCULADORA) ---
     let currentGlossaryTab = 'points'; // 'points' o 'calc'
 
     function renderGlossaryView(container) {
