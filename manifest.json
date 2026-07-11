@@ -1,0 +1,24 @@
+{
+  "name": "TejeFácil",
+  "short_name": "TejeFácil",
+  "description": "Para los patrones.",
+  "start_url": "https://marcosocana-al.github.io/tejefacil",
+  "display": "standalone",
+  "background_color": "#111827",
+  "theme_color": "#4f46e5",
+  "lang": "es",
+  "icons": [
+    {
+      "src": "foto.png",
+      "sizes": "196x196",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-128.png",
+      "sizes": "128x128",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
