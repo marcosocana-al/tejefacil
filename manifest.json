@@ -1,11 +1,11 @@
 {
   "name": "TejeFácil",
   "short_name": "TejeFácil",
-  "description": "Para los patrones.",
-  "start_url": "https://marcosocana-al.github.io/tejefacil",
+  "description": "Tu contador de vueltas y compañero de ganchillo.",
+  "start_url": "./",
   "display": "standalone",
-  "background_color": "#111827",
-  "theme_color": "#4f46e5",
+  "background_color": "#fdfbf7",
+  "theme_color": "#e89a8a",
   "lang": "es",
   "icons": [
     {
