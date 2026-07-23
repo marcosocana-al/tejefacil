@@ -333,6 +333,7 @@
       initNetworkListeners();
       updateStretchTimerUI();
       initStretchMonitor();
+      initVoices();
 
       // Autodescarga silenciosa al abrir si hay conexión
       if (gasWebAppUrl && navigator.onLine) {
@@ -341,6 +342,16 @@
 
       switchView('projects');
     });
+
+    // Carga de voces para sintetizador
+    function initVoices() {
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.getVoices();
+        window.speechSynthesis.onvoiceschanged = () => {
+          window.speechSynthesis.getVoices();
+        };
+      }
+    }
 
     // DETECTOR EN TIEMPO REAL DE CONEXIÓN
     function initNetworkListeners() {
@@ -886,10 +897,46 @@
       }
     }
 
+    // PROMPT OPTIMIZADO PARA IA
     function copyAIPrompt() {
-      const prompt = "Limpia y desglosa este patrón de ganchillo en texto plano, vuelta por vuelta consecutiva, sin explicaciones ni introducciones. Muestra una sola instrucción por línea:\n\n[PEGA TU PATRÓN AQUÍ]";
-      navigator.clipboard.writeText(prompt);
-      showToast('✨ Prompt copiado para tu IA favorita');
+      const prompt = `Actúa como experto en ganchillo/crochet. Adapta y limpia el siguiente patrón para que quede en el formato exacto que necesita mi aplicación contador de vueltas TejeFácil.
+
+REGLAS OBLIGATORIAS DE FORMATO:
+1. Una sola instrucción o vuelta por línea en texto plano.
+2. Si el patrón tiene vueltas repetidas como "Vta 5 a 10: 24 pb" o "Vtas 3 a 7: 12 pb", déjalas con ese formato exacto de rango para que la app las expanda automáticamente.
+3. Elimina introducciones, fotos, listas de materiales, abreviaturas explicativas y saludos. Conserva solo las instrucciones paso a paso.
+4. Mantén los puntos totales al final de cada vuelta entre paréntesis si los tiene, por ejemplo: (18 pb).
+5. NO uses negritas (**), ni viñetas (*, -), ni encabezados de Markdown (#). Solo líneas de texto limpio.
+
+PATRÓN A LIMPIAR:
+[PEGA TU PATRÓN AQUÍ]`;
+
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(prompt).then(() => {
+          showToast('✨ ¡Prompt copiado con éxito!');
+        }).catch(() => {
+          fallbackCopyText(prompt);
+        });
+      } else {
+        fallbackCopyText(prompt);
+      }
+    }
+
+    function fallbackCopyText(text) {
+      const textArea = document.createElement("textarea");
+      textArea.value = text;
+      textArea.style.position = "fixed";
+      textArea.style.opacity = "0";
+      document.body.appendChild(textArea);
+      textArea.focus();
+      textArea.select();
+      try {
+        document.execCommand('copy');
+        showToast('✨ ¡Prompt copiado al portapapeles!');
+      } catch (err) {
+        showToast('❌ Error al copiar. Copia manualmente.');
+      }
+      document.body.removeChild(textArea);
     }
 
     // VISTA 3: MODO TEJER (PANTALLA PRINCIPAL)
@@ -1062,20 +1109,50 @@
       }
     }
 
+    // LECTOR DE VOZ MEJORADO Y COMPATIBLE CON MÓVILES
     function speakInstruction(encodedText) {
       if (!('speechSynthesis' in window)) {
         showToast('⚠️ Tu navegador no soporta lectura por voz.');
         return;
       }
 
-      window.speechSynthesis.cancel();
       const text = decodeURIComponent(encodedText);
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = 'es-ES';
-      utterance.rate = 0.9;
+      if (!text) return;
 
-      window.speechSynthesis.speak(utterance);
-      showToast('🔊 Leyendo instrucción...');
+      // Si ya está reproduciendo, al pulsar de nuevo se detiene
+      if (window.speechSynthesis.speaking) {
+        window.speechSynthesis.cancel();
+        showToast('⏹️ Lectura pausada');
+        return;
+      }
+
+      // Detener cualquier audio previo
+      window.speechSynthesis.cancel();
+
+      setTimeout(() => {
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'es-ES';
+        utterance.rate = 0.95;
+        utterance.pitch = 1.0;
+
+        // Intentar seleccionar voz en español disponible
+        const voices = window.speechSynthesis.getVoices();
+        const spanishVoice = voices.find(v => v.lang && (v.lang.startsWith('es') || v.lang.includes('Spanish')));
+        if (spanishVoice) {
+          utterance.voice = spanishVoice;
+        }
+
+        utterance.onstart = () => {
+          showToast('🔊 Leyendo instrucción...');
+        };
+
+        utterance.onerror = (e) => {
+          console.warn('Error en síntesis de voz:', e);
+          showToast('⚠️ No se pudo reproducir el audio.');
+        };
+
+        window.speechSynthesis.speak(utterance);
+      }, 50);
     }
 
     // VISTA 4: GLOSARIO
