@@ -2,21 +2,22 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>TejeFácil - Tu Contador de Vueltas de Crochet</title>
-  
-  <!-- Enlaces para la PWA (Manifest e Iconos) -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>TejeFácil - Tu Compañero de Crochet y Contador de Vueltas</title>
+
+  <!-- Configuración PWA -->
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#e89a8a">
   <link rel="apple-touch-icon" href="tejefacil.png">
 
-  <!-- Tailwind CSS para un diseño moderno y responsive -->
+  <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- PDF.js para leer PDFs localmente -->
+  <!-- PDF.js para leer archivos PDF en local -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+
   <script>
     tailwind.config = {
-      darkMode: 'class', // Habilitamos el modo noche basado en clase CSS
+      darkMode: 'class',
       theme: {
         extend: {
           colors: {
@@ -29,7 +30,7 @@
               500: '#b48352',
               600: '#a37042',
               700: '#835732',
-              accent: '#e89a8a', // Rosa pastel cálido
+              accent: '#e89a8a',
               accentHover: '#d97d6c',
               lavender: '#d1c2e0'
             }
@@ -39,29 +40,26 @@
     }
   </script>
   <style>
-    /* Estilo para ocultar la barra de desplazamiento manteniendo la funcionalidad */
-    .no-scrollbar::-webkit-scrollbar {
-      display: none;
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    .transition-all-300 { transition: all 0.3s ease; }
+    /* Animación de pulso para dictado de voz */
+    @keyframes pulse-ring {
+      0% { transform: scale(0.95); opacity: 0.8; }
+      50% { transform: scale(1.08); opacity: 1; }
+      100% { transform: scale(0.95); opacity: 0.8; }
     }
-    .no-scrollbar {
-      -ms-overflow-style: none;
-      scrollbar-width: none;
-    }
-    /* Animación suave para cambios de vuelta y de tema */
-    .transition-all-300 {
-      transition: all 0.3s ease;
-    }
+    .speaking-pulse { animation: pulse-ring 1.5s infinite ease-in-out; }
   </style>
 </head>
 <body class="bg-crochet-50 dark:bg-neutral-950 text-neutral-800 dark:text-neutral-100 font-sans min-h-screen flex flex-col selection:bg-crochet-accent selection:text-white transition-colors duration-300">
 
   <!-- APP CONTAINER -->
-  <div class="max-w-md w-full mx-auto bg-crochet-100 dark:bg-neutral-900 min-h-screen flex flex-col shadow-xl relative pb-20 transition-colors duration-300">
-    
+  <div class="max-w-md w-full mx-auto bg-crochet-100 dark:bg-neutral-900 min-h-screen flex flex-col shadow-2xl relative pb-20 transition-colors duration-300">
+
     <!-- HEADER -->
-    <header class="bg-white dark:bg-neutral-850 dark:border-neutral-800 border-b border-crochet-200 px-4 py-3 sticky top-0 z-40 flex items-center justify-between shadow-sm transition-colors duration-300">
-      <div class="flex items-center gap-2">
-        <!-- Icono de Ovillo de Lana (SVG) -->
+    <header class="bg-white dark:bg-neutral-850 border-b border-crochet-200 dark:border-neutral-800 px-4 py-3 sticky top-0 z-40 flex items-center justify-between shadow-sm transition-colors duration-300">
+      <div class="flex items-center gap-2 cursor-pointer" onclick="switchView('projects')">
         <svg class="w-8 h-8 text-crochet-accent" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M12 2a10 10 0 1 0 10 10V10" />
           <path d="M12 22a10 10 0 0 0 7-17" />
@@ -70,27 +68,38 @@
           <path d="M12 18c2 0 3-1.5 3-3s-1-3-3-3" />
         </svg>
         <div>
-          <h1 class="text-xl font-bold text-crochet-700 dark:text-crochet-300 leading-tight">TejeFácil</h1>
-          <p class="text-xs text-crochet-500 dark:text-neutral-400 font-medium">Compañero de ganchillo</p>
+          <h1 class="text-xl font-extrabold text-crochet-700 dark:text-crochet-300 leading-tight">TejeFácil</h1>
+          <div class="flex items-center gap-1.5">
+            <span class="text-[10px] text-crochet-500 dark:text-neutral-400 font-semibold">Ganchillo Paso a Paso</span>
+            <!-- Indicador Estado Nube -->
+            <span id="cloud-status-badge" class="inline-flex items-center gap-1 text-[9px] px-1.5 py-0.2 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 font-bold" title="Estado de Sincronización Nube">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Offline
+            </span>
+          </div>
         </div>
       </div>
-      
-      <!-- LADO DERECHO DEL HEADER: MODO NOCHE Y CONTROLES -->
-      <div class="flex items-center gap-2">
-        <!-- Botón de Estiramientos / Reloj -->
-        <button onclick="toggleStretchSettings()" class="p-2 rounded-xl bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 hover:text-crochet-accent transition-colors" title="Temporizador de Estiramientos">
+
+      <!-- CONTROLES HEADER -->
+      <div class="flex items-center gap-1.5">
+        <!-- Botón Configuración Nube / Google Sheets -->
+        <button onclick="toggleCloudSettingsModal()" class="p-2 rounded-xl bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 hover:text-crochet-accent transition-colors" title="Sincronizar con Google Sheets">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3 15a4 4 0 004 4h9a5 5 0 001-9.999 5.002 5.002 0 00-9.78 2.096A4.001 4.001 0 003 15z" />
+          </svg>
+        </button>
+
+        <!-- Botón Estiramientos -->
+        <button onclick="toggleStretchSettings()" class="p-2 rounded-xl bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 hover:text-crochet-accent transition-colors" title="Aviso de Salud">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
         </button>
 
-        <!-- Interruptor de Tema (Modo Noche) -->
+        <!-- Interruptor Tema -->
         <button onclick="toggleDarkMode()" class="p-2 rounded-xl bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 hover:text-crochet-accent transition-colors" id="theme-toggle" title="Cambiar Tema">
-          <!-- Icono Sol (por defecto para modo claro) -->
           <svg id="sun-icon" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m0-12.728l.707.707m12.728 12.728l.707-.707M12 8a4 4 0 100 8 4 4 0 000-8z" />
           </svg>
-          <!-- Icono Luna (para modo noche) -->
           <svg id="moon-icon" class="w-5 h-5 hidden" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
           </svg>
@@ -98,26 +107,60 @@
       </div>
     </header>
 
-    <!-- MAIN CONTENT AREA -->
+    <!-- ÁREA PRINCIPAL -->
     <main class="flex-1 p-4 flex flex-col justify-between" id="app-content">
-      <!-- Las vistas se inyectarán dinámicamente aquí -->
+      <!-- Inyección dinámica de vistas -->
     </main>
 
-    <!-- NOTIFICACIONES TOAST (Evita alerts del navegador) -->
-    <div id="toast" class="fixed bottom-24 left-1/2 -translate-x-1/2 bg-neutral-900/95 text-white text-xs py-2.5 px-4 rounded-xl shadow-lg transition-all duration-300 transform translate-y-10 opacity-0 pointer-events-none z-50 flex items-center gap-2 max-w-[90%] text-center">
-      <span id="toast-text">¡Mensaje guardado!</span>
+    <!-- TOAST NOTIFICACIONES -->
+    <div id="toast" class="fixed bottom-24 left-1/2 -translate-x-1/2 bg-neutral-900/95 text-white text-xs py-2.5 px-4 rounded-xl shadow-xl transition-all duration-300 transform translate-y-10 opacity-0 pointer-events-none z-50 flex items-center gap-2 max-w-[90%] text-center border border-neutral-700">
+      <span id="toast-text">¡Guardado correctamente!</span>
     </div>
 
-    <!-- PANEL DE CONFIGURACIÓN DEL TEMPORIZADOR DE ESTIRAMIENTOS (Desplegable) -->
+    <!-- MODAL CONFIGURACIÓN NUBE / GOOGLE SHEETS -->
+    <div id="cloud-modal" class="hidden fixed inset-0 bg-neutral-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+      <div class="bg-white dark:bg-neutral-800 w-full max-w-sm rounded-3xl p-5 space-y-4 shadow-2xl transition-colors">
+        <div class="flex justify-between items-center border-b border-neutral-100 dark:border-neutral-700 pb-2">
+          <div class="flex items-center gap-2">
+            <span class="text-xl">☁️</span>
+            <h3 class="font-bold text-neutral-800 dark:text-neutral-100 text-sm">Sincronización Google Sheets</h3>
+          </div>
+          <button onclick="toggleCloudSettingsModal()" class="text-neutral-400 hover:text-neutral-600">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+          </button>
+        </div>
+
+        <p class="text-[11px] text-neutral-500 dark:text-neutral-400 leading-relaxed">
+          Pega aquí la URL de tu Web App de Google Apps Script (GAS). De esta forma, tus patrones estarán siempre sincronizados entre tu ordenador y móvil.
+        </p>
+
+        <div>
+          <label class="block text-[10px] font-bold text-neutral-400 uppercase mb-1">URL de tu Web App de GAS</label>
+          <input type="url" id="gas-url-input" placeholder="https://script.google.com/macros/s/.../exec" class="w-full px-3 py-2 border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-750 text-neutral-800 dark:text-white rounded-xl text-xs focus:ring-2 focus:ring-crochet-accent focus:outline-none">
+        </div>
+
+        <div class="flex gap-2 pt-2">
+          <button onclick="syncWithCloud()" class="flex-1 bg-emerald-600 text-white py-2.5 rounded-xl font-bold text-xs shadow hover:bg-emerald-700 transition-colors flex items-center justify-center gap-1">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 8H17"/></svg>
+            Sincronizar Ahora
+          </button>
+          <button onclick="saveCloudUrl()" class="flex-1 bg-crochet-accent text-white py-2.5 rounded-xl font-bold text-xs shadow hover:bg-crochet-accentHover transition-colors">
+            Guardar URL
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- PANEL SALUD / ESTIRAMIENTOS -->
     <div id="stretch-settings-panel" class="hidden absolute top-16 left-1/2 -translate-x-1/2 w-[90%] max-w-sm bg-white dark:bg-neutral-800 p-4 rounded-2xl shadow-xl border border-neutral-200 dark:border-neutral-700 z-50 space-y-3 transition-all duration-300">
       <div class="flex justify-between items-center">
-        <h4 class="font-bold text-sm text-neutral-700 dark:text-neutral-200">Cronómetro de Salud Ganchillera</h4>
-        <button onclick="toggleStretchSettings()" class="text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300">
+        <h4 class="font-bold text-sm text-neutral-700 dark:text-neutral-200">Cronómetro Salud Ganchillera</h4>
+        <button onclick="toggleStretchSettings()" class="text-neutral-400 hover:text-neutral-600">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
         </button>
       </div>
       <p class="text-[11px] text-neutral-500 dark:text-neutral-400 leading-normal">
-        Pasar horas tejiendo cansa las manos. ¡Activa este aviso automático para recordar estirar tus dedos y muñecas cada cierto tiempo!
+        Recuerda descansar y estirar manos y muñecas para prevenir molestias al tejer.
       </p>
       <div class="flex items-center justify-between py-1 border-t border-b border-neutral-100 dark:border-neutral-700">
         <span class="text-xs font-bold text-neutral-600 dark:text-neutral-300">Recordatorio Activo</span>
@@ -127,67 +170,55 @@
         </label>
       </div>
       <div class="flex items-center justify-between text-xs">
-        <span class="font-bold text-neutral-600 dark:text-neutral-300">Frecuencia del aviso:</span>
+        <span class="font-bold text-neutral-600 dark:text-neutral-300">Frecuencia:</span>
         <select id="stretch-time-select" onchange="changeStretchTime()" class="border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-700 text-xs rounded-lg p-1.5 focus:ring-1 focus:ring-crochet-accent focus:outline-none">
-          <option value="20">Cada 20 minutos</option>
-          <option value="30" selected>Cada 30 minutos</option>
-          <option value="45">Cada 45 minutos</option>
+          <option value="20">Cada 20 min</option>
+          <option value="30" selected>Cada 30 min</option>
+          <option value="45">Cada 45 min</option>
         </select>
       </div>
       <div id="stretch-countdown-text" class="text-[10px] text-center text-crochet-500 font-bold"></div>
     </div>
 
-    <!-- MODAL DE RUTINA DE ESTIRAMIENTOS (La alarma amigable) -->
+    <!-- MODAL RUTINA ESTIRAMIENTOS -->
     <div id="stretch-modal" class="hidden fixed inset-0 bg-neutral-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
       <div class="bg-white dark:bg-neutral-800 w-full max-w-sm rounded-3xl p-5 space-y-4 shadow-2xl overflow-y-auto max-h-[90%]">
         <div class="text-center space-y-1">
           <div class="text-4xl">🌸</div>
-          <h3 class="font-bold text-neutral-800 dark:text-neutral-100 text-lg">¡Momento de soltar la aguja!</h3>
-          <p class="text-xs text-neutral-500 dark:text-neutral-400">Dedica 1 minuto a cuidar de tus manos antes de seguir tejiendo:</p>
+          <h3 class="font-bold text-neutral-800 dark:text-neutral-100 text-lg">¡Momento de pausa!</h3>
+          <p class="text-xs text-neutral-500 dark:text-neutral-400">Dedica 1 minuto a cuidar tus manos antes de continuar:</p>
         </div>
-
-        <div class="space-y-3 pt-2">
-          <!-- Ejercicio 1 -->
+        <div class="space-y-3 pt-2 text-xs">
           <div class="flex gap-3 bg-neutral-50 dark:bg-neutral-750 p-2.5 rounded-xl border border-neutral-100 dark:border-neutral-700">
             <div class="text-2xl flex items-center">👐</div>
-            <div class="text-xs">
+            <div>
               <p class="font-bold text-neutral-700 dark:text-neutral-200">1. Abanico de Dedos</p>
-              <p class="text-neutral-500 dark:text-neutral-400">Abre bien las manos estirando los dedos durante 5 segundos. Luego ciérralas en un puño. Hazlo 3 veces.</p>
+              <p class="text-neutral-500 dark:text-neutral-400">Estira los dedos durante 5 seg y cierra en puño. Repite 3 veces.</p>
             </div>
           </div>
-          <!-- Ejercicio 2 -->
           <div class="flex gap-3 bg-neutral-50 dark:bg-neutral-750 p-2.5 rounded-xl border border-neutral-100 dark:border-neutral-700">
             <div class="text-2xl flex items-center">🧘‍♀️</div>
-            <div class="text-xs">
+            <div>
               <p class="font-bold text-neutral-700 dark:text-neutral-200">2. Estiramiento de Muñeca</p>
-              <p class="text-neutral-500 dark:text-neutral-400">Extiende el brazo hacia delante, apunta los dedos al suelo y empújalos suavemente hacia atrás 10 segundos.</p>
-            </div>
-          </div>
-          <!-- Ejercicio 3 -->
-          <div class="flex gap-3 bg-neutral-50 dark:bg-neutral-750 p-2.5 rounded-xl border border-neutral-100 dark:border-neutral-700">
-            <div class="text-2xl flex items-center">🔄</div>
-            <div class="text-xs">
-              <p class="font-bold text-neutral-700 dark:text-neutral-200">3. Rotación de Muñecas</p>
-              <p class="text-neutral-500 dark:text-neutral-400">Dibuja círculos en el aire despacio con ambas muñecas. 5 giros hacia fuera y 5 hacia dentro.</p>
+              <p class="text-neutral-500 dark:text-neutral-400">Palma hacia delante y estira suavemente los dedos hacia atrás 10 seg.</p>
             </div>
           </div>
         </div>
-
-        <button onclick="closeStretchModal()" class="w-full bg-crochet-accent text-white py-3 rounded-2xl font-bold text-xs shadow hover:bg-crochet-accentHover active:scale-95 transition-all duration-150">
-          🧘‍♀️ Manos listas, ¡a seguir tejiendo!
+        <button onclick="closeStretchModal()" class="w-full bg-crochet-accent text-white py-3 rounded-2xl font-bold text-xs shadow hover:bg-crochet-accentHover active:scale-95 transition-all">
+          🧘‍♀️ ¡Manos descansadas, a tejer!
         </button>
       </div>
     </div>
 
-    <!-- MENÚ DE NAVEGACIÓN INFERIOR (Estilo App Móvil) -->
-    <nav class="fixed bottom-0 left-1/2 -translate-x-1/2 max-w-md w-full bg-white dark:bg-neutral-850 dark:border-neutral-800 border-t border-crochet-200 py-2 px-6 flex justify-around items-center z-40 shadow-[0_-2px_10px_rgba(0,0,0,0.03)] transition-colors duration-300">
+    <!-- MENÚ NAVEGACIÓN INFERIOR -->
+    <nav class="fixed bottom-0 left-1/2 -translate-x-1/2 max-w-md w-full bg-white dark:bg-neutral-850 border-t border-crochet-200 dark:border-neutral-800 py-2 px-6 flex justify-around items-center z-40 shadow-lg transition-colors duration-300">
       <button onclick="switchView('projects')" id="nav-projects" class="flex flex-col items-center gap-1 text-crochet-accent font-semibold transition-all-300">
         <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
         </svg>
-        <span class="text-[10px]">Mis Proyectos</span>
+        <span class="text-[10px]">Mis Patrones</span>
       </button>
-      
+
       <button onclick="switchView('editor')" id="nav-editor" class="flex flex-col items-center gap-1 text-neutral-400 font-medium transition-all-300">
         <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -199,95 +230,71 @@
         <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
         </svg>
-        <span class="text-[10px]">Glosario & Info</span>
+        <span class="text-[10px]">Glosario & Guías</span>
       </button>
     </nav>
   </div>
 
-  <!-- SCRIPT DE LA APLICACIÓN -->
+  <!-- LÓGICA JAVASCRIPT -->
   <script>
-    // --- REGISTRO DEL SERVICE WORKER (Para permitir Instalación) ---
+    // Registro del Service Worker para PWA Offline
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('sw.js').then(reg => {
-          console.log('Service Worker registrado con éxito:', reg.scope);
+          console.log('Service Worker cargado correctamente');
         }).catch(err => {
-          console.warn('Error al registrar el Service Worker:', err);
+          console.warn('Error con Service Worker:', err);
         });
       });
     }
 
-    // --- CONFIGURACIÓN LECTOR PDF ---
+    // PDF.js
     const pdfjsLib = window['pdfjs-dist/build/pdf'];
     if (pdfjsLib) {
       pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
     }
 
-    // --- ESTADO GLOBAL (En memoria local - Offline) ---
+    // ESTADO GLOBAL DE LA APLICACIÓN
     let projects = [];
     let activeProjectId = null;
     let currentView = 'projects';
-    
-    // Estados añadidos (Modo Noche & Salud)
+    let gasWebAppUrl = '';
+
+    // Configs
     let isDarkMode = false;
     let stretchActive = false;
     let stretchIntervalMins = 30;
     let lastStretchCheckTime = Date.now();
     let stretchMonitorInterval = null;
+    let isSpeaking = false;
 
-    // Glosario estático de crochet (Inglés - Español)
+    // Glosario de Crochet
     const GLOSSARY = [
       { us: 'chain', es: 'cadeneta', abUs: 'ch', abEs: 'cad', desc: 'Punto de inicio básico.' },
       { us: 'single crochet', es: 'punto bajo / medio punto', abUs: 'sc', abEs: 'pb / mp', desc: 'Punto básico corto y denso.' },
       { us: 'half double crochet', es: 'medio punto alto / media vareta', abUs: 'hdc', abEs: 'mpa / mv', desc: 'Punto intermedio entre bajo y alto.' },
       { us: 'double crochet', es: 'punto alto / vareta', abUs: 'dc', abEs: 'pa / v', desc: 'Punto alto clásico con una lazada inicial.' },
       { us: 'treble crochet', es: 'punto alto doble / vareta doble', abUs: 'tr', abEs: 'pad / vd', desc: 'Punto muy alto con dos lazadas iniciales.' },
-      { us: 'slip stitch', es: 'punto raso / deslizado / enano', abUs: 'sl st', abEs: 'pr / pd / pe', desc: 'Usado para unir vueltas o avanzar sin dar altura.' },
-      { us: 'increase', es: 'aumento', abUs: 'inc', abEs: 'aum', desc: 'Tejer dos puntos en el mismo punto de la vuelta anterior.' },
-      { us: 'decrease', es: 'disminución', abUs: 'dec', abEs: 'dism', desc: 'Tejer dos puntos juntos para reducirlos a uno solo.' },
-      { us: 'magic ring', es: 'anillo mágico', abUs: 'mr', abEs: 'am', desc: 'Bucle ajustable para empezar a tejer en redondo.' },
+      { us: 'slip stitch', es: 'punto raso / deslizado / enano', abUs: 'sl st', abEs: 'pr / pd / pe', desc: 'Unir vueltas o avanzar sin dar altura.' },
+      { us: 'increase', es: 'aumento', abUs: 'inc', abEs: 'aum', desc: 'Tejer dos puntos en el mismo punto anterior.' },
+      { us: 'decrease', es: 'disminución', abUs: 'dec', abEs: 'dism', desc: 'Tejer dos puntos juntos para reducir.' },
+      { us: 'magic ring', es: 'anillo mágico', abUs: 'mr', abEs: 'am', desc: 'Bucle ajustable para tejer en redondo.' },
       { us: 'round', es: 'vuelta / ronda', abUs: 'rnd', abEs: 'vta', desc: 'Una vuelta completa en tejido circular.' },
       { us: 'row', es: 'fila / hilera', abUs: 'row', abEs: 'fil', desc: 'Una pasada en tejido plano de ida y vuelta.' },
-      { us: 'stitch', es: 'punto', abUs: 'st', abEs: 'pt', desc: 'La unidad básica del tejido.' },
-      { us: 'stitches', es: 'puntos', abUs: 'sts', abEs: 'pts', desc: 'Plural de puntos.' },
-      { us: 'repeat', es: 'repetir', abUs: 'rep', abEs: 'rep', desc: 'Instrucción para duplicar una secuencia.' },
-      { us: 'front loop only', es: 'solo hebra delantera', abUs: 'flo', abEs: 'shd', desc: 'Tejer tomando solo la parte de delante del punto.' },
-      { us: 'back loop only', es: 'solo hebra trasera', abUs: 'blo', abEs: 'sht', desc: 'Tejer tomando solo la parte de atrás del punto.' }
+      { us: 'front loop only', es: 'solo hebra delantera', abUs: 'flo', abEs: 'shd', desc: 'Tejer tomando solo la parte frontal.' },
+      { us: 'back loop only', es: 'solo hebra trasera', abUs: 'blo', abEs: 'sht', desc: 'Tejer tomando solo la parte trasera.' }
     ];
 
-    // Datos de equivalencias de lanas y agujas
     const YARN_WEIGHTS = [
-      { number: '0', category: 'Lace', name: 'Superfina / Encaje', mm: '1.5 - 2.25 mm', us: 'US 000 a 1' },
+      { number: '0', category: 'Lace', name: 'Encaje / Superfina', mm: '1.5 - 2.25 mm', us: 'US 000 a 1' },
       { number: '1', category: 'Super Fine', name: 'Fingering / Calcetines', mm: '2.25 - 3.25 mm', us: 'US 1 a 3' },
       { number: '2', category: 'Fine', name: 'Sport / Bebé', mm: '3.25 - 3.75 mm', us: 'US 3 a 5' },
       { number: '3', category: 'Light', name: 'DK / Light Worsted', mm: '3.75 - 4.5 mm', us: 'US 5 a 7' },
       { number: '4', category: 'Medium', name: 'Worsted / Aran', mm: '4.5 - 5.5 mm', us: 'US 7 a I-9' },
-      { number: '5', category: 'Bulky', name: 'Chunky / Robusta', mm: '5.5 - 8.0 mm', us: 'US I-9 a L-11' },
-      { number: '6', category: 'Super Bulky', name: 'Super Chunky', mm: '8.0 - 12.0 mm', us: 'US L-11 a P-16' },
-      { number: '7', category: 'Jumbo', name: 'Gigante / Trapillo', mm: '15.0 mm o más', us: 'US Q o superior' }
+      { number: '5', category: 'Bulky', name: 'Chunky / Gruesa', mm: '5.5 - 8.0 mm', us: 'US I-9 a L-11' },
+      { number: '6', category: 'Super Bulky', name: 'Super Chunky', mm: '8.0 - 12.0 mm', us: 'US L-11 a P-16' }
     ];
 
-    const NEEDLE_CONVERSIONS = [
-      { metric: '2.0 mm', us: 'US 0', uk: '14' },
-      { metric: '2.25 mm', us: 'US 1', uk: '13' },
-      { metric: '2.5 mm', us: 'US 1.5', uk: '12' },
-      { metric: '2.75 mm', us: 'US 2', uk: '12' },
-      { metric: '3.0 mm', us: 'US 2.5', uk: '11' },
-      { metric: '3.25 mm', us: 'US 3', uk: '10' },
-      { metric: '3.5 mm', us: 'US 4', uk: '-' },
-      { metric: '3.75 mm', us: 'US 5', uk: '9' },
-      { metric: '4.0 mm', us: 'US 6', uk: '8' },
-      { metric: '4.5 mm', us: 'US 7', uk: '7' },
-      { metric: '5.0 mm', us: 'US 8', uk: '6' },
-      { metric: '5.5 mm', us: 'US 9', uk: '5' },
-      { metric: '6.0 mm', us: 'US 10', uk: '4' },
-      { metric: '6.5 mm', us: 'US 10.5', uk: '3' },
-      { metric: '8.0 mm', us: 'US 11', uk: '0' },
-      { metric: '9.0 mm', us: 'US 13', uk: '00' },
-      { metric: '10.0 mm', us: 'US 15', uk: '000' }
-    ];
-
-    // Patrones de ejemplo cargados por defecto
     const SAMPLE_PROJECTS = [
       {
         id: 'sample-pulpito',
@@ -296,158 +303,182 @@
 Vta 2: 6 aum (12 pb)
 Vta 3: (1 pb, 1 aum) x 6 (18 pb)
 Vta 4: (2 pb, 1 aum) x 6 (24 pb)
-Vta 5 a 9: 24 pb (5 vueltas sin cambios)
+Vta 5 a 9: 24 pb (5 vueltas)
 Vta 10: (2 pb, 1 dism) x 6 (18 pb)
 Vta 11: (1 pb, 1 dism) x 6 (12 pb)
-Colocar ojos de seguridad y rellenar firmemente con algodón
+Rellenar firmemente con algodón sintético
 Vta 12: 6 dism (6 pb)
-Cerrar el tejido y ocultar la hebra restante. ¡Listo!`,
+Cerrar el tejido y rematar hebra.`,
         parsedRows: [
           "Anillo Mágico de 6 puntos (6)",
           "Vta 2: 6 aum (12 pb)",
           "Vta 3: (1 pb, 1 aum) x 6 (18 pb)",
           "Vta 4: (2 pb, 1 aum) x 6 (24 pb)",
-          "Vta 5: 24 pb (vuela 1 de 5 sin cambios)",
-          "Vta 6: 24 pb (vuela 2 de 5 sin cambios)",
-          "Vta 7: 24 pb (vuela 3 de 5 sin cambios)",
-          "Vta 8: 24 pb (vuela 4 de 5 sin cambios)",
-          "Vta 9: 24 pb (vuela 5 de 5 sin cambios)",
+          "Vta 5: 24 pb (vuela 1 de 5)",
+          "Vta 6: 24 pb (vuela 2 de 5)",
+          "Vta 7: 24 pb (vuela 3 de 5)",
+          "Vta 8: 24 pb (vuela 4 de 5)",
+          "Vta 9: 24 pb (vuela 5 de 5)",
           "Vta 10: (2 pb, 1 dism) x 6 (18 pb)",
           "Vta 11: (1 pb, 1 dism) x 6 (12 pb)",
-          "Colocar ojos de seguridad y rellenar firmemente con algodón",
+          "Rellenar firmemente con algodón sintético",
           "Vta 12: 6 dism (6 pb)",
-          "Cerrar el tejido y ocultar la hebra restante. ¡Listo!"
+          "Cerrar el tejido y rematar hebra."
         ],
         currentRowIndex: 0,
         currentStitchCount: 0,
-        notes: 'Usar lana de algodón de grosor medio y aguja de 3.0mm.',
+        notes: 'Usar aguja de 3.0mm y lana de algodón.',
         language: 'es',
-        dateCreated: Date.now() - 100000
-      },
-      {
-        id: 'sample-mug',
-        name: '☕ Cozy Mug Hug (English)',
-        rawPattern: `Ch 11.
-Row 1: Sc in 2nd ch from hook and in each ch across, turn. (10 sts)
-Row 2: Ch 1, FLO sc in each st across, turn. (10 sts)
-Row 3 to 20: Repeat Row 2.
-Row 21: Ch 1, sc in each st across. Do not fasten off.
-Sew a nice wooden button to the end to close it!`,
-        parsedRows: [
-          "Ch 11.",
-          "Row 1: Sc in 2nd ch from hook and in each ch across, turn. (10 sts)",
-          "Row 2: Ch 1, FLO sc in each st across, turn. (10 sts)",
-          "Row 3 to 20: Repeat Row 2 (This is Row 3)",
-          "Row 4: Repeat Row 2",
-          "Row 5: Repeat Row 2",
-          "Row 6: Repeat Row 2",
-          "Row 7: Repeat Row 2",
-          "Row 8: Repeat Row 2",
-          "Row 9: Repeat Row 2",
-          "Row 10: Repeat Row 2",
-          "Row 11: Repeat Row 2",
-          "Row 12: Repeat Row 2",
-          "Row 13: Repeat Row 2",
-          "Row 14: Repeat Row 2",
-          "Row 15: Repeat Row 2",
-          "Row 16: Repeat Row 2",
-          "Row 17: Repeat Row 2",
-          "Row 18: Repeat Row 2",
-          "Row 19: Repeat Row 2",
-          "Row 20: Repeat Row 2",
-          "Row 21: Ch 1, sc in each st across. Do not fasten off.",
-          "Sew a nice wooden button to the end to close it!"
-        ],
-        currentRowIndex: 0,
-        currentStitchCount: 0,
-        notes: 'Ideal for gifts. Used a nice cream-colored wool.',
-        language: 'en',
-        dateCreated: Date.now()
+        dateCreated: Date.now() - 500000
       }
     ];
 
-    // --- INICIALIZACIÓN ---
+    // INICIALIZACIÓN
     window.addEventListener('load', () => {
       loadFromStorage();
       if (projects.length === 0) {
         projects = [...SAMPLE_PROJECTS];
         saveToStorage();
       }
-      // Seleccionar primer proyecto activo por defecto si existe
       if (projects.length > 0 && !activeProjectId) {
         activeProjectId = projects[0].id;
       }
-      
-      // Aplicar tema guardado
+
       applyTheme();
-      // Inicializar el temporizador de estiramiento
+      updateCloudStatusBadge();
       updateStretchTimerUI();
       initStretchMonitor();
+
+      // Intentar sincronizar si hay URL guardada
+      if (gasWebAppUrl) {
+        syncWithCloud(true);
+      }
 
       switchView('projects');
     });
 
-    // --- GUARDADO LOCAL ---
+    // ALMACENAMIENTO LOCAL & NUBE
     function saveToStorage() {
       localStorage.setItem('tejefacil_projects', JSON.stringify(projects));
-      if (activeProjectId) {
-        localStorage.setItem('tejefacil_active_id', activeProjectId);
-      }
+      if (activeProjectId) localStorage.setItem('tejefacil_active_id', activeProjectId);
       localStorage.setItem('tejefacil_darkmode', isDarkMode);
+      localStorage.setItem('tejefacil_gas_url', gasWebAppUrl);
       localStorage.setItem('tejefacil_stretch_active', stretchActive);
       localStorage.setItem('tejefacil_stretch_interval', stretchIntervalMins);
     }
 
     function loadFromStorage() {
       const stored = localStorage.getItem('tejefacil_projects');
-      if (stored) {
-        projects = JSON.parse(stored);
-      }
+      if (stored) projects = JSON.parse(stored);
+
       const storedActive = localStorage.getItem('tejefacil_active_id');
-      if (storedActive) {
-        activeProjectId = storedActive;
-      }
-      
-      // Cargar configuraciones extra
+      if (storedActive) activeProjectId = storedActive;
+
       isDarkMode = localStorage.getItem('tejefacil_darkmode') === 'true';
+      gasWebAppUrl = localStorage.getItem('tejefacil_gas_url') || '';
       stretchActive = localStorage.getItem('tejefacil_stretch_active') === 'true';
       stretchIntervalMins = parseInt(localStorage.getItem('tejefacil_stretch_interval') || '30', 10);
     }
 
-    // --- CONTROL DE MODO NOCHE ---
+    // SINCRONIZACIÓN GOOGLE SHEETS (GAS)
+    function toggleCloudSettingsModal() {
+      const modal = document.getElementById('cloud-modal');
+      const urlInput = document.getElementById('gas-url-input');
+      if (urlInput) urlInput.value = gasWebAppUrl;
+      if (modal) modal.classList.toggle('hidden');
+    }
+
+    function saveCloudUrl() {
+      const urlInput = document.getElementById('gas-url-input');
+      if (urlInput) {
+        gasWebAppUrl = urlInput.value.trim();
+        saveToStorage();
+        updateCloudStatusBadge();
+        showToast('URL de sincronización guardada');
+        toggleCloudSettingsModal();
+      }
+    }
+
+    function updateCloudStatusBadge() {
+      const badge = document.getElementById('cloud-status-badge');
+      if (!badge) return;
+
+      if (gasWebAppUrl) {
+        badge.className = "inline-flex items-center gap-1 text-[9px] px-1.5 py-0.2 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 font-bold";
+        badge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Google Sheet`;
+      } else {
+        badge.className = "inline-flex items-center gap-1 text-[9px] px-1.5 py-0.2 rounded-full bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-300 font-bold";
+        badge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span> Modo Local`;
+      }
+    }
+
+    async function syncWithCloud(silent = false) {
+      if (!gasWebAppUrl) {
+        if (!silent) showToast('⚠️ Configura primero tu URL de Google Apps Script');
+        return;
+      }
+
+      if (!navigator.onLine) {
+        if (!silent) showToast('📡 Estás sin conexión. Se guardará localmente.');
+        return;
+      }
+
+      try {
+        if (!silent) showToast('⏳ Sincronizando con Google Sheets...');
+
+        // 1. Enviar datos locales
+        await fetch(gasWebAppUrl, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ projects: projects })
+        });
+
+        // 2. Obtener datos actualizados de la nube
+        const response = await fetch(gasWebAppUrl);
+        const data = await response.json();
+
+        if (data && data.status === 'success' && Array.isArray(data.projects)) {
+          if (data.projects.length > 0) {
+            projects = data.projects;
+            saveToStorage();
+            if (!silent) showToast('✅ ¡Sincronizado con tu Hoja de Cálculo!');
+            if (currentView === 'projects') renderProjectsView(document.getElementById('app-content'));
+          }
+        }
+      } catch (err) {
+        console.warn('Error en sync cloud:', err);
+        if (!silent) showToast('⚠️ Conectado en local. Sincronizará al volver la conexión.');
+      }
+    }
+
+    // TEMA Y ESTIRAMIENTOS
     function toggleDarkMode() {
       isDarkMode = !isDarkMode;
       applyTheme();
       saveToStorage();
-      showToast(isDarkMode ? '🌙 Modo Noche activado' : '☀️ Modo Claro activado');
+      showToast(isDarkMode ? '🌙 Modo Noche' : '☀️ Modo Claro');
     }
 
     function applyTheme() {
       const htmlEl = document.documentElement;
       const sunIcon = document.getElementById('sun-icon');
       const moonIcon = document.getElementById('moon-icon');
-      
+
       if (isDarkMode) {
         htmlEl.classList.add('dark');
-        if (sunIcon && moonIcon) {
-          sunIcon.classList.add('hidden');
-          moonIcon.classList.remove('hidden');
-        }
+        if (sunIcon) sunIcon.classList.add('hidden');
+        if (moonIcon) moonIcon.classList.remove('hidden');
       } else {
         htmlEl.classList.remove('dark');
-        if (sunIcon && moonIcon) {
-          sunIcon.classList.remove('hidden');
-          moonIcon.classList.add('hidden');
-        }
+        if (sunIcon) sunIcon.classList.remove('hidden');
+        if (moonIcon) moonIcon.classList.add('hidden');
       }
     }
 
-    // --- TEMPORIZADOR DE SALUD Y ESTIRAMIENTO ---
     function toggleStretchSettings() {
       const panel = document.getElementById('stretch-settings-panel');
-      if (panel) {
-        panel.classList.toggle('hidden');
-      }
+      if (panel) panel.classList.toggle('hidden');
     }
 
     function toggleStretchActive() {
@@ -457,7 +488,6 @@ Sew a nice wooden button to the end to close it!`,
         lastStretchCheckTime = Date.now();
         saveToStorage();
         updateStretchTimerUI();
-        showToast(stretchActive ? '⏳ Avisos de estiramiento activados' : '🔕 Avisos apagados');
       }
     }
 
@@ -468,7 +498,6 @@ Sew a nice wooden button to the end to close it!`,
         lastStretchCheckTime = Date.now();
         saveToStorage();
         updateStretchTimerUI();
-        showToast(`Avisos configurados cada ${stretchIntervalMins} min.`);
       }
     }
 
@@ -476,108 +505,58 @@ Sew a nice wooden button to the end to close it!`,
       const checkbox = document.getElementById('stretch-active-toggle');
       const select = document.getElementById('stretch-time-select');
       const countEl = document.getElementById('stretch-countdown-text');
-      
+
       if (checkbox) checkbox.checked = stretchActive;
       if (select) select.value = stretchIntervalMins;
-      
-      if (countEl) {
-        if (stretchActive) {
-          countEl.innerText = `Próximo descanso en aprox. ${stretchIntervalMins} min.`;
-        } else {
-          countEl.innerText = 'Temporizador desactivado';
-        }
-      }
+      if (countEl) countEl.innerText = stretchActive ? `Aviso cada ${stretchIntervalMins} min.` : 'Temporizador apagado';
     }
 
     function initStretchMonitor() {
       if (stretchMonitorInterval) clearInterval(stretchMonitorInterval);
-      
-      // Comprobar cada 15 segundos
       stretchMonitorInterval = setInterval(() => {
         if (!stretchActive) return;
-        
-        const now = Date.now();
-        const diffMinutes = (now - lastStretchCheckTime) / 60000;
-        
+        const diffMinutes = (Date.now() - lastStretchCheckTime) / 60000;
         if (diffMinutes >= stretchIntervalMins) {
-          // ¡Hora de estirar!
-          showStretchModal();
+          const modal = document.getElementById('stretch-modal');
+          if (modal) modal.classList.remove('hidden');
         }
-      }, 15000);
-    }
-
-    function showStretchModal() {
-      const modal = document.getElementById('stretch-modal');
-      if (modal) {
-        modal.classList.remove('hidden');
-      }
+      }, 20000);
     }
 
     function closeStretchModal() {
       const modal = document.getElementById('stretch-modal');
-      if (modal) {
-        modal.classList.add('hidden');
-      }
-      // Reiniciamos el cronómetro de salud
+      if (modal) modal.classList.add('hidden');
       lastStretchCheckTime = Date.now();
-      updateStretchTimerUI();
     }
 
-
-    // --- DETECTOR AUTOMÁTICO DE IDIOMA ---
+    // PARSER INTELIGENTE DE PATRONES
     function autoDetectLanguage(text) {
-      const engKeywords = ['sc', 'ch', 'dc', 'hdc', 'inc', 'dec', 'st', 'sts', 'sl st', 'mr', 'rnd', 'rnds', 'row', 'turn', 'magic ring'];
-      const espKeywords = ['pb', 'cad', 'pa', 'mpa', 'aum', 'dism', 'pt', 'pts', 'pr', 'pe', 'am', 'vta', 'vuelta', 'fila', 'anillo mágico', 'vuelta'];
-      
-      let engCount = 0;
-      let espCount = 0;
-      
-      const cleanText = text.toLowerCase();
-      
-      engKeywords.forEach(word => {
-        const regex = new RegExp(`\\b${word}\\b`, 'g');
-        const matches = cleanText.match(regex);
-        if (matches) engCount += matches.length;
-      });
-      
-      espKeywords.forEach(word => {
-        const regex = new RegExp(`\\b${word}\\b`, 'g');
-        const matches = cleanText.match(regex);
-        if (matches) espCount += matches.length;
-      });
-
-      return engCount >= espCount ? 'en' : 'es';
+      const engKeywords = ['sc', 'ch', 'dc', 'hdc', 'inc', 'dec', 'st', 'sts', 'sl st', 'mr', 'rnd', 'turn'];
+      const espKeywords = ['pb', 'cad', 'pa', 'mpa', 'aum', 'dism', 'pt', 'pts', 'pr', 'pe', 'am', 'vta'];
+      let eng = 0, esp = 0;
+      const clean = text.toLowerCase();
+      engKeywords.forEach(w => { if (new RegExp(`\\b${w}\\b`).test(clean)) eng++; });
+      espKeywords.forEach(w => { if (new RegExp(`\\b${w}\\b`).test(clean)) esp++; });
+      return eng >= esp ? 'en' : 'es';
     }
 
-    // --- SINTETIZADOR DE SECUENCIAS ---
-    // Actualizado: Ahora separa inteligentemente por puntos seguidos, ignorando decimales y abreviaciones cortas
     function parsePatternToRows(rawText) {
       const lines = rawText.split('\n').map(l => l.trim()).filter(l => l.length > 0);
       const processedRows = [];
 
       lines.forEach(line => {
-        // Explicación Regex: Corta en puntos que NO estén seguidos por un número (ej: 3.5),
-        // que estén seguidos de espacios y donde el siguiente carácter empiece por mayúscula,
-        // número, o signos de apertura. Así evitamos romper abreviaciones tipo "pb. en" pero sí rompemos "pb. Vta 2:".
         const sentences = line.split(/\.(?!\d)\s+(?=[A-ZÁÉÍÓÚÑ0-9¿([])/).map(s => s.trim()).filter(s => s.length > 0);
 
         sentences.forEach(sentence => {
-          let cleanSentence = sentence;
-          // Devolver el punto al final de la instrucción si se lo hemos quitado al dividir
-          if (!/[.!?]$/.test(cleanSentence)) {
-            cleanSentence += '.';
-          }
+          let clean = sentence;
+          if (!/[.!?]$/.test(clean)) clean += '.';
 
           const rangeEspRegex = /^(vta|vuelta|fila|v)\s+(\d+)\s+a\s+(\d+)\s*:(.*)$/i;
           const rangeEngRegex = /^(row|rnd|round|rnds)\s+(\d+)\s+to\s+(\d+)\s*:(.*)$/i;
 
-          let match = cleanSentence.match(rangeEspRegex);
+          let match = clean.match(rangeEspRegex);
           let isEsp = true;
-          
-          if (!match) {
-            match = cleanSentence.match(rangeEngRegex);
-            isEsp = false;
-          }
+          if (!match) { match = clean.match(rangeEngRegex); isEsp = false; }
 
           if (match) {
             const type = match[1];
@@ -587,89 +566,73 @@ Sew a nice wooden button to the end to close it!`,
 
             if (startNum < endNum && (endNum - startNum) < 100) {
               for (let i = startNum; i <= endNum; i++) {
-                processedRows.push(`${type} ${i}: ${action} ${isEsp ? `(vuelve ${i - startNum + 1} de ${endNum - startNum + 1})` : `(round ${i - startNum + 1} of ${endNum - startNum + 1})`}`);
+                processedRows.push(`${type} ${i}: ${action} ${isEsp ? `(vuelta ${i - startNum + 1} de ${endNum - startNum + 1})` : `(round ${i - startNum + 1} of ${endNum - startNum + 1})`}`);
               }
               return;
             }
           }
-          processedRows.push(cleanSentence);
+          processedRows.push(clean);
         });
       });
 
       return processedRows;
     }
 
-    // --- ENRUTADOR DE VISTAS (Navegación) ---
+    // NAVEGACIÓN Y ENRUTADOR
     function switchView(viewName) {
       currentView = viewName;
       const mainEl = document.getElementById('app-content');
-      
-      // Ocultar paneles flotantes por seguridad al cambiar de vista
+
       const sPanel = document.getElementById('stretch-settings-panel');
       if (sPanel) sPanel.classList.add('hidden');
 
-      // Reset estilos del menú de navegación inferior
       ['projects', 'editor', 'glossary'].forEach(v => {
         const btn = document.getElementById(`nav-${v}`);
-        if (btn) {
-          btn.className = "flex flex-col items-center gap-1 text-neutral-400 dark:text-neutral-500 font-medium transition-all-300";
-        }
+        if (btn) btn.className = "flex flex-col items-center gap-1 text-neutral-400 dark:text-neutral-500 font-medium transition-all-300";
       });
-      
-      // Activar botón del menú actual
+
       const activeNavBtn = document.getElementById(`nav-${viewName === 'active-project' ? 'projects' : viewName}`);
-      if (activeNavBtn) {
-        activeNavBtn.className = "flex flex-col items-center gap-1 text-crochet-accent font-semibold transition-all-300";
-      }
+      if (activeNavBtn) activeNavBtn.className = "flex flex-col items-center gap-1 text-crochet-accent font-semibold transition-all-300";
 
       switch (viewName) {
-        case 'projects':
-          renderProjectsView(mainEl);
-          break;
-        case 'editor':
-          renderEditorView(mainEl);
-          break;
-        case 'glossary':
-          renderGlossaryView(mainEl);
-          break;
-        case 'active-project':
-          renderActiveProjectView(mainEl);
-          break;
+        case 'projects': renderProjectsView(mainEl); break;
+        case 'editor': renderEditorView(mainEl); break;
+        case 'glossary': renderGlossaryView(mainEl); break;
+        case 'active-project': renderActiveProjectView(mainEl); break;
       }
     }
 
-    // --- MENSAJES TOAST ---
     function showToast(message) {
       const toast = document.getElementById('toast');
       const toastText = document.getElementById('toast-text');
       if (!toast || !toastText) return;
-      
+
       toastText.innerText = message;
       toast.classList.remove('translate-y-10', 'opacity-0', 'pointer-events-none');
       toast.classList.add('translate-y-0', 'opacity-100');
-      
+
       setTimeout(() => {
         toast.classList.add('translate-y-10', 'opacity-0', 'pointer-events-none');
         toast.classList.remove('translate-y-0', 'opacity-100');
       }, 2500);
     }
 
-    // --- VISTA 1: LISTA DE PROYECTOS ---
+    // VISTA 1: MIS PROYECTOS / PATRONES
     function renderProjectsView(container) {
       container.innerHTML = `
         <div class="flex-1 flex flex-col">
           <div class="flex items-center justify-between mb-4">
-            <h2 class="text-lg font-bold text-neutral-700 dark:text-neutral-200">Mis Proyectos</h2>
-            <button onclick="switchView('editor')" class="bg-crochet-accent text-white px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-1 shadow-sm hover:bg-crochet-accentHover transition-colors">
+            <div>
+              <h2 class="text-lg font-bold text-neutral-700 dark:text-neutral-200">Mis Patrones</h2>
+              <p class="text-xs text-neutral-400">Selecciona uno para empezar a tejer</p>
+            </div>
+            <button onclick="switchView('editor')" class="bg-crochet-accent text-white px-3.5 py-1.5 rounded-full text-xs font-bold flex items-center gap-1 shadow-sm hover:bg-crochet-accentHover transition-colors">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
-              Nuevo
+              Nuevo Patrón
             </button>
           </div>
 
-          <!-- LISTA DE TARJETAS -->
-          <div class="space-y-3 flex-1 overflow-y-auto no-scrollbar max-h-[calc(100vh-220px)]" id="projects-list">
-            <!-- Dinámico -->
-          </div>
+          <div class="space-y-3 flex-1 overflow-y-auto no-scrollbar max-h-[calc(100vh-220px)]" id="projects-list"></div>
         </div>
       `;
 
@@ -678,14 +641,13 @@ Sew a nice wooden button to the end to close it!`,
         listEl.innerHTML = `
           <div class="flex flex-col items-center justify-center py-16 text-center px-4 bg-white dark:bg-neutral-800 rounded-2xl border border-dashed border-crochet-200 dark:border-neutral-700">
             <div class="text-4xl mb-2">🧶</div>
-            <p class="text-sm font-semibold text-neutral-600 dark:text-neutral-300">No tienes proyectos creados</p>
-            <p class="text-xs text-neutral-400 dark:text-neutral-500 mt-1">¡Toca "Nuevo" para importar tu primer patrón de crochet y empezar a tejer!</p>
+            <p class="text-sm font-semibold text-neutral-600 dark:text-neutral-300">No tienes patrones guardados</p>
+            <p class="text-xs text-neutral-400 dark:text-neutral-500 mt-1">¡Añade un nuevo patrón o sincroniza con tu Google Sheet para empezar!</p>
           </div>
         `;
         return;
       }
 
-      // Ordenar por fecha de creación (más recientes primero)
       const sortedProjects = [...projects].sort((a, b) => b.dateCreated - a.dateCreated);
 
       sortedProjects.forEach(proj => {
@@ -693,39 +655,34 @@ Sew a nice wooden button to the end to close it!`,
         const currentProgress = totalRows > 0 ? Math.round((proj.currentRowIndex / totalRows) * 100) : 0;
         const currentInstruction = totalRows > 0 ? proj.parsedRows[proj.currentRowIndex] || '¡Terminado! 🎉' : 'Sin instrucciones';
         const isSelected = activeProjectId === proj.id;
-        const langBadge = proj.language === 'en' ? 'Inglés' : 'Español';
 
         const card = document.createElement('div');
         card.className = `p-4 rounded-2xl border transition-all-300 cursor-pointer ${
-          isSelected 
-            ? 'bg-white dark:bg-neutral-800 border-crochet-accent shadow-md ring-1 ring-crochet-accent' 
+          isSelected
+            ? 'bg-white dark:bg-neutral-800 border-crochet-accent shadow-md ring-1 ring-crochet-accent'
             : 'bg-white dark:bg-neutral-800 border-neutral-200 dark:border-neutral-700/80 hover:border-crochet-300 shadow-sm'
         }`;
-        
+
         card.innerHTML = `
           <div class="flex justify-between items-start mb-2" onclick="selectAndOpenProject('${proj.id}')">
             <div class="flex-1 min-w-0 pr-2">
               <h3 class="font-bold text-neutral-800 dark:text-neutral-100 truncate text-base">${proj.name}</h3>
               <div class="flex gap-1.5 mt-1">
-                <span class="text-[10px] bg-crochet-200 dark:bg-neutral-700 text-crochet-700 dark:text-crochet-200 px-2 py-0.5 rounded-full font-medium">${langBadge}</span>
+                <span class="text-[10px] bg-crochet-200 dark:bg-neutral-700 text-crochet-700 dark:text-crochet-200 px-2 py-0.5 rounded-full font-medium">${proj.language === 'en' ? 'Inglés' : 'Español'}</span>
                 <span class="text-[10px] bg-neutral-100 dark:bg-neutral-750 text-neutral-500 dark:text-neutral-400 px-2 py-0.5 rounded-full font-medium">${totalRows} vueltas</span>
               </div>
             </div>
-            <!-- Botón de borrar -->
-            <button onclick="deleteProject(event, '${proj.id}')" class="text-neutral-300 dark:text-neutral-600 hover:text-red-500 dark:hover:text-red-400 p-1 rounded-lg transition-colors" title="Eliminar proyecto">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-              </svg>
+            <button onclick="deleteProject(event, '${proj.id}')" class="text-neutral-300 dark:text-neutral-600 hover:text-red-500 p-1 rounded-lg transition-colors" title="Eliminar">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
             </button>
           </div>
 
           <div onclick="selectAndOpenProject('${proj.id}')">
             <div class="text-xs text-neutral-500 dark:text-neutral-400 mb-3 line-clamp-2">
-              <span class="font-semibold text-crochet-600 dark:text-crochet-300">Vuelta ${proj.currentRowIndex + 1}:</span> 
+              <span class="font-semibold text-crochet-600 dark:text-crochet-300">Vuelta ${proj.currentRowIndex + 1}:</span>
               <span class="italic text-neutral-600 dark:text-neutral-300">"${currentInstruction}"</span>
             </div>
 
-            <!-- Progreso -->
             <div>
               <div class="flex justify-between text-[10px] font-semibold text-neutral-500 dark:text-neutral-400 mb-1">
                 <span>Progreso: ${proj.currentRowIndex}/${totalRows} vueltas</span>
@@ -749,104 +706,53 @@ Sew a nice wooden button to the end to close it!`,
 
     function deleteProject(event, id) {
       event.stopPropagation();
-      
-      if (confirm('¿Seguro que quieres eliminar este proyecto? No se puede deshacer.')) {
+      if (confirm('¿Quieres eliminar este patrón?')) {
         projects = projects.filter(p => p.id !== id);
-        if (activeProjectId === id) {
-          activeProjectId = projects.length > 0 ? projects[0].id : null;
-        }
+        if (activeProjectId === id) activeProjectId = projects.length > 0 ? projects[0].id : null;
         saveToStorage();
-        showToast('Proyecto eliminado correctamente');
+        syncWithCloud(true);
+        showToast('Patrón eliminado');
         switchView('projects');
       }
     }
 
-
-    // --- VISTA 2: NUEVO PATRÓN / EDITOR ---
+    // VISTA 2: NUEVO PATRÓN
     function renderEditorView(container) {
       container.innerHTML = `
         <div class="flex-1 flex flex-col bg-white dark:bg-neutral-800 p-4 rounded-2xl border border-neutral-200 dark:border-neutral-700 shadow-sm transition-colors">
           <div class="flex justify-between items-center mb-3">
-            <h2 class="text-lg font-bold text-neutral-700 dark:text-neutral-200">Nuevo Proyecto</h2>
-            <button onclick="copyAIPrompt()" class="text-[10px] bg-indigo-100 dark:bg-indigo-950/50 text-indigo-700 dark:text-indigo-300 font-bold px-2 py-1.5 rounded-lg flex items-center gap-1 hover:bg-indigo-200 transition-colors shadow-sm" title="Copia un prompt para que la IA formatee tu patrón">
+            <h2 class="text-lg font-bold text-neutral-700 dark:text-neutral-200">Nuevo Patrón</h2>
+            <button onclick="copyAIPrompt()" class="text-[10px] bg-indigo-100 dark:bg-indigo-950/50 text-indigo-700 dark:text-indigo-300 font-bold px-2 py-1.5 rounded-lg flex items-center gap-1 hover:bg-indigo-200 transition-colors shadow-sm">
               ✨ Prompt IA
             </button>
           </div>
-          
-          <!-- Nombre -->
+
           <div class="mb-3">
             <label class="block text-xs font-bold text-neutral-500 dark:text-neutral-400 uppercase mb-1">Nombre del Proyecto</label>
-            <input type="text" id="proj-name" placeholder="Ej: Oso Amigurumi de lana lila" class="w-full px-3 py-2 border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-750 text-neutral-800 dark:text-white rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-crochet-accent focus:border-transparent">
+            <input type="text" id="proj-name" placeholder="Ej: Manta Sofá o Gorro Lana" class="w-full px-3 py-2 border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-750 text-neutral-800 dark:text-white rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-crochet-accent">
           </div>
 
-          <!-- Importador de Archivos (PDF) -->
           <div class="mb-3 bg-neutral-50 dark:bg-neutral-750 p-2.5 rounded-xl border border-neutral-200 dark:border-neutral-700">
-            <label class="block text-xs font-bold text-neutral-500 dark:text-neutral-400 uppercase mb-1">Importar desde Archivo (PDF/TXT)</label>
-            <input type="file" id="file-upload" accept=".pdf,.txt" onchange="handleFileUpload(event)" class="w-full text-xs text-neutral-500 dark:text-neutral-400 file:mr-3 file:py-1.5 file:px-3 file:rounded-full file:border-0 file:font-bold file:bg-crochet-100 dark:file:bg-neutral-700 file:text-crochet-700 dark:file:text-crochet-300 hover:file:bg-crochet-200 cursor-pointer">
-            <div id="pdf-loading" class="hidden text-[10px] text-crochet-500 dark:text-crochet-300 mt-1 font-bold animate-pulse">⏳ Extrayendo texto del documento, por favor espera...</div>
+            <label class="block text-xs font-bold text-neutral-500 dark:text-neutral-400 uppercase mb-1">Cargar Archivo (PDF/TXT)</label>
+            <input type="file" id="file-upload" accept=".pdf,.txt" onchange="handleFileUpload(event)" class="w-full text-xs text-neutral-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-full file:border-0 file:font-bold file:bg-crochet-100 dark:file:bg-neutral-700 file:text-crochet-700 dark:file:text-crochet-300 cursor-pointer">
+            <div id="pdf-loading" class="hidden text-[10px] text-crochet-500 mt-1 font-bold animate-pulse">⏳ Extrayendo texto...</div>
           </div>
 
-          <!-- Patrón de Texto -->
           <div class="mb-3 flex-1 flex flex-col">
-            <div class="flex justify-between items-center mb-1">
-              <label class="block text-xs font-bold text-neutral-500 dark:text-neutral-400 uppercase">Patrón del Proyecto</label>
-              <span class="text-[10px] text-neutral-400 dark:text-neutral-500">Pega tu PDF o texto copiado aquí</span>
-            </div>
-            <textarea id="proj-pattern" placeholder="Ejemplo:&#10;Vuelta 1: Anillo mágico de 6 pb&#10;Vuelta 2: 6 aum (12)&#10;Vta 3 a 5: 12 pb" class="w-full flex-1 min-h-[140px] p-3 border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-750 text-neutral-800 dark:text-white rounded-xl text-xs font-mono focus:outline-none focus:ring-2 focus:ring-crochet-accent focus:border-transparent no-scrollbar resize-none"></textarea>
+            <label class="block text-xs font-bold text-neutral-500 dark:text-neutral-400 uppercase mb-1">Texto del Patrón</label>
+            <textarea id="proj-pattern" placeholder="Pega tu patrón aquí lineas por linea...&#10;Vta 1: Anillo mágico 6 pb&#10;Vta 2: 6 aum (12)" class="w-full flex-1 min-h-[140px] p-3 border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-750 text-neutral-800 dark:text-white rounded-xl text-xs font-mono focus:outline-none focus:ring-2 focus:ring-crochet-accent resize-none no-scrollbar"></textarea>
           </div>
 
-          <!-- Idioma Detectado en Tiempo Real -->
-          <div class="bg-crochet-100 dark:bg-neutral-750 p-2.5 rounded-xl mb-3 flex items-center justify-between text-xs transition-colors">
-            <span class="font-medium text-neutral-600 dark:text-neutral-300">Detector de Idioma:</span>
-            <div class="flex gap-2" id="lang-toggle-container">
-              <button onclick="setManualLang('es')" id="btn-lang-es" class="px-2 py-1 rounded bg-white dark:bg-neutral-800 font-bold text-crochet-700 dark:text-crochet-300 shadow-sm border border-crochet-200 dark:border-neutral-700">Español 🇪🇸</button>
-              <button onclick="setManualLang('en')" id="btn-lang-en" class="px-2 py-1 rounded bg-transparent font-medium text-neutral-500 dark:text-neutral-400">English 🇬🇧</button>
-            </div>
-          </div>
-
-          <!-- Notas -->
           <div class="mb-4">
             <label class="block text-xs font-bold text-neutral-500 dark:text-neutral-400 uppercase mb-1">Notas Rápidas (Opcional)</label>
-            <input type="text" id="proj-notes" placeholder="Ej: Aguja de 2.5mm, lana de mi abuela" class="w-full px-3 py-2 border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-750 text-neutral-800 dark:text-white rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-crochet-accent">
+            <input type="text" id="proj-notes" placeholder="Ej: Aguja 3.5mm, lana acrílica rosa" class="w-full px-3 py-2 border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-750 text-neutral-800 dark:text-white rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-crochet-accent">
           </div>
 
-          <button onclick="saveNewProject()" class="w-full bg-crochet-accent text-white py-3 rounded-xl font-bold text-sm shadow-sm hover:bg-crochet-accentHover transition-colors flex items-center justify-center gap-2">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
-            Crear Proyecto y Empezar
+          <button onclick="saveNewProject()" class="w-full bg-crochet-accent text-white py-3 rounded-xl font-bold text-sm shadow hover:bg-crochet-accentHover transition-colors">
+            Guardar y Empezar a Tejer
           </button>
         </div>
       `;
-
-      // Escuchador para autodetectar idioma según escribe el patrón
-      const patternTextarea = document.getElementById('proj-pattern');
-      let detectTimeout;
-      
-      patternTextarea.addEventListener('input', () => {
-        clearTimeout(detectTimeout);
-        detectTimeout = setTimeout(() => {
-          const text = patternTextarea.value;
-          if (text.length > 10) {
-            const detected = autoDetectLanguage(text);
-            setManualLang(detected);
-          }
-        }, 800);
-      });
-    }
-
-    let selectedLang = 'es';
-    function setManualLang(lang) {
-      selectedLang = lang;
-      const btnEs = document.getElementById('btn-lang-es');
-      const btnEn = document.getElementById('btn-lang-en');
-      if (!btnEs || !btnEn) return;
-
-      if (lang === 'es') {
-        btnEs.className = "px-2 py-1 rounded bg-white dark:bg-neutral-750 font-bold text-crochet-700 dark:text-crochet-300 shadow-sm border border-crochet-200 dark:border-neutral-600";
-        btnEn.className = "px-2 py-1 rounded bg-transparent font-medium text-neutral-500 dark:text-neutral-400";
-      } else {
-        btnEn.className = "px-2 py-1 rounded bg-white dark:bg-neutral-750 font-bold text-crochet-700 dark:text-crochet-300 shadow-sm border border-crochet-200 dark:border-neutral-600";
-        btnEs.className = "px-2 py-1 rounded bg-transparent font-medium text-neutral-500 dark:text-neutral-400";
-      }
     }
 
     function saveNewProject() {
@@ -854,46 +760,41 @@ Sew a nice wooden button to the end to close it!`,
       const pattern = document.getElementById('proj-pattern').value.trim();
       const notes = document.getElementById('proj-notes').value.trim();
 
-      if (!name) {
-        showToast('⚠️ Por favor, ponle un nombre al proyecto');
-        return;
-      }
-      if (!pattern) {
-        showToast('⚠️ Pega algunas líneas de patrón para empezar');
+      if (!name || !pattern) {
+        showToast('⚠️ Ingresa un nombre y las instrucciones del patrón');
         return;
       }
 
       const parsedRows = parsePatternToRows(pattern);
-
       const newProj = {
         id: 'proj-' + Date.now(),
         name: name,
         rawPattern: pattern,
         parsedRows: parsedRows,
         currentRowIndex: 0,
-        currentStitchCount: 0, // Añadido para Punto 1
+        currentStitchCount: 0,
         notes: notes || 'Sin notas especiales.',
-        language: selectedLang,
+        language: autoDetectLanguage(pattern),
         dateCreated: Date.now()
       };
 
       projects.push(newProj);
       activeProjectId = newProj.id;
       saveToStorage();
-      
-      showToast('🎉 ¡Proyecto creado con éxito!');
+      syncWithCloud(true);
+
+      showToast('🎉 ¡Patrón guardado correctamente!');
       switchView('active-project');
     }
 
-    // --- IMPORTACIÓN DE ARCHIVOS Y PROMPT IA ---
     async function handleFileUpload(event) {
       const file = event.target.files[0];
       if (!file) return;
 
       if (file.type === 'application/pdf') {
         const loadingEl = document.getElementById('pdf-loading');
-        if(loadingEl) loadingEl.classList.remove('hidden');
-        
+        if (loadingEl) loadingEl.classList.remove('hidden');
+
         try {
           const arrayBuffer = await file.arrayBuffer();
           const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
@@ -901,237 +802,136 @@ Sew a nice wooden button to the end to close it!`,
           for (let i = 1; i <= pdf.numPages; i++) {
             const page = await pdf.getPage(i);
             const textContent = await page.getTextContent();
-            const pageText = textContent.items.map(item => item.str).join(' ');
-            fullText += pageText.replace(/([0-9]+\.)/g, '\n$1') + '\n';
+            fullText += textContent.items.map(item => item.str).join(' ') + '\n';
           }
-          
-          fullText = fullText.replace(/\s{3,}/g, '\n').trim();
-          
           const patternInput = document.getElementById('proj-pattern');
-          if (patternInput) {
-            if (patternInput.value) patternInput.value += '\n\n';
-            patternInput.value += fullText;
-            patternInput.dispatchEvent(new Event('input'));
-          }
-          showToast('📄 PDF extraído. ¡Usa el botón ✨ Prompt IA si el texto sale desordenado!');
+          if (patternInput) patternInput.value = fullText.trim();
+          showToast('📄 PDF extraído correctamente.');
         } catch (err) {
-          console.error(err);
-          showToast('❌ Error al leer el PDF.');
+          showToast('❌ Error al procesar el PDF');
         } finally {
-          if(loadingEl) loadingEl.classList.add('hidden');
-        }
-      } else if (file.type === 'text/plain') {
-        try {
-          const text = await file.text();
-          const patternInput = document.getElementById('proj-pattern');
-          if (patternInput) {
-            if (patternInput.value) patternInput.value += '\n\n';
-            patternInput.value += text;
-            patternInput.dispatchEvent(new Event('input'));
-          }
-          showToast('📄 Archivo de texto cargado.');
-        } catch (err) {
-          showToast('❌ Error al leer el archivo de texto.');
+          if (loadingEl) loadingEl.classList.add('hidden');
         }
       } else {
-          showToast('⚠️ Formato no soportado. Usa PDF o TXT.');
+        const text = await file.text();
+        const patternInput = document.getElementById('proj-pattern');
+        if (patternInput) patternInput.value = text;
+        showToast('📄 Archivo cargado.');
       }
-      
-      event.target.value = '';
     }
 
     function copyAIPrompt() {
-      const prompt = "Actúa como un experto en ganchillo. Quiero pasar un patrón a mi aplicación de contador de vueltas. Por favor, analiza el texto o documento que te voy a pasar a continuación y extrae SOLO las instrucciones de las vueltas. \n\nDevuélvelas en texto plano, con una instrucción o vuelta por línea. Elimina introducciones, imágenes, lista de materiales, abreviaturas o explicaciones innecesarias; me interesan solo las vueltas consecutivas.\nMantén el idioma original de los puntos (si está en inglés, déjalo en inglés). Si hay secuencias agrupadas como 'Vtas 5 a 9: 24 pb', déjalas exactamente con ese formato. \n\nAquí tienes el patrón a limpiar:\n\n[PEGA O ADJUNTA TU PATRÓN AQUÍ]";
-      
-      const textArea = document.createElement("textarea");
-      textArea.value = prompt;
-      document.body.appendChild(textArea);
-      textArea.select();
-      try {
-        document.execCommand('copy');
-        showToast('✨ ¡Prompt copiado! Pégalo en ChatGPT o Claude.');
-      } catch (err) {
-        showToast('❌ Error al copiar.');
-      }
-      document.body.removeChild(textArea);
+      const prompt = "Limpia y desglosa este patrón de ganchillo en texto plano, vuelta por vuelta consecutiva, sin explicaciones ni introducciones. Muestra una sola instrucción por línea:\n\n[PEGA TU PATRÓN AQUÍ]";
+      navigator.clipboard.writeText(prompt);
+      showToast('✨ Prompt copiado para tu IA favorita');
     }
 
-
-    // --- VISTA 3: MODO TEJER (PANTALLA DE TRABAJO PRINCIPAL) ---
+    // VISTA 3: MODO TEJER (PANTALLA PRINCIPAL)
     function renderActiveProjectView(container) {
       const proj = projects.find(p => p.id === activeProjectId);
-      
       if (!proj) {
         container.innerHTML = `
           <div class="flex-1 flex flex-col items-center justify-center py-20 text-center">
-            <p class="text-sm font-semibold text-neutral-500">Ningún proyecto seleccionado</p>
-            <button onclick="switchView('projects')" class="mt-4 bg-crochet-accent text-white px-4 py-2 rounded-xl text-xs font-bold shadow">Ver mis proyectos</button>
+            <p class="text-sm font-semibold text-neutral-500">Ningún patrón seleccionado</p>
+            <button onclick="switchView('projects')" class="mt-4 bg-crochet-accent text-white px-4 py-2 rounded-xl text-xs font-bold shadow">Ver Mis Patrones</button>
           </div>
         `;
         return;
       }
 
-      // Asegurar inicialización de la cuenta de puntos del proyecto activo
-      if (proj.currentStitchCount === undefined) {
-        proj.currentStitchCount = 0;
-      }
+      if (proj.currentStitchCount === undefined) proj.currentStitchCount = 0;
 
       const totalRows = proj.parsedRows.length;
       const progressPercent = totalRows > 0 ? Math.round((proj.currentRowIndex / totalRows) * 100) : 0;
-      
+
       const prevInstruction = proj.currentRowIndex > 0 ? proj.parsedRows[proj.currentRowIndex - 1] : null;
       const currentInstruction = totalRows > 0 ? proj.parsedRows[proj.currentRowIndex] : '¡Felicidades, patrón terminado! 🥳';
       const nextInstruction = proj.currentRowIndex < totalRows - 1 ? proj.parsedRows[proj.currentRowIndex + 1] : null;
 
-      const localTranslations = getLocalTranslations(currentInstruction, proj.language);
-
       container.innerHTML = `
         <div class="flex-1 flex flex-col justify-between h-[calc(100vh-140px)]">
-          
-          <!-- Encabezado del Proyecto -->
+
+          <!-- Encabezado Patrón -->
           <div class="bg-white dark:bg-neutral-850 p-3 rounded-2xl border border-neutral-150 dark:border-neutral-800 shadow-sm flex items-center justify-between transition-colors">
-            <button onclick="switchView('projects')" class="text-neutral-500 dark:text-neutral-400 hover:text-crochet-accent p-1 rounded-lg transition-colors">
+            <button onclick="switchView('projects')" class="text-neutral-500 hover:text-crochet-accent p-1">
               <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
             </button>
             <div class="flex-1 text-center px-2 min-w-0">
               <h2 class="font-bold text-neutral-800 dark:text-neutral-100 text-sm truncate">${proj.name}</h2>
-              <p class="text-[10px] text-neutral-400 dark:text-neutral-500 font-medium">Idioma del patrón: ${proj.language === 'en' ? 'Inglés 🇬🇧' : 'Español 🇪🇸'}</p>
+              <p class="text-[10px] text-neutral-400 font-medium">Idioma: ${proj.language === 'en' ? 'Inglés 🇬🇧' : 'Español 🇪🇸'}</p>
             </div>
-            <button onclick="toggleNotesPanel()" class="text-neutral-500 dark:text-neutral-400 hover:text-crochet-accent p-1 rounded-lg transition-colors relative">
-              <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
-              ${proj.notes && proj.notes !== 'Sin notas especiales.' ? '<span class="absolute top-1 right-1 w-2 h-2 rounded-full bg-crochet-accent"></span>' : ''}
+            <!-- Lector de Voz Hands-Free -->
+            <button onclick="speakInstruction('${encodeURIComponent(currentInstruction)}')" id="speech-btn" class="p-2 rounded-xl bg-crochet-100 dark:bg-neutral-750 text-crochet-700 dark:text-crochet-300 hover:bg-crochet-200 transition-colors" title="Leer en voz alta">
+              🔊
             </button>
           </div>
 
-          <!-- PANEL DE INSTRUCCIONES CENTRAL -->
+          <!-- PANEL PASO A PASO -->
           <div class="my-2 space-y-1.5">
-            <!-- Vuelta anterior (atenuada) -->
-            <div class="bg-white/50 dark:bg-neutral-800/40 text-neutral-400 dark:text-neutral-500 text-[11px] py-1.5 px-3 rounded-xl border border-neutral-100 dark:border-neutral-800/60 italic select-none">
-              <span class="font-bold text-[9px] uppercase text-neutral-300 dark:text-neutral-600">Anterior (Vta ${proj.currentRowIndex}):</span>
-              <p class="truncate">${prevInstruction || '-- Inicio --'}</p>
+            <!-- Vuelta Anterior -->
+            <div class="bg-white/50 dark:bg-neutral-800/40 text-neutral-400 text-[11px] py-1.5 px-3 rounded-xl border border-neutral-100 dark:border-neutral-800/60 italic truncate">
+              <span class="font-bold text-[9px] uppercase">Anterior (Vta ${proj.currentRowIndex}):</span> ${prevInstruction || '-- Inicio --'}
             </div>
 
             <!-- VUELTA ACTUAL -->
-            <div class="bg-white dark:bg-neutral-800 p-4 rounded-2xl border-2 border-crochet-accent dark:border-crochet-accent/80 shadow-sm relative overflow-hidden transition-colors">
+            <div class="bg-white dark:bg-neutral-800 p-4 rounded-2xl border-2 border-crochet-accent shadow-sm relative overflow-hidden transition-colors">
               <div class="absolute top-0 right-0 bg-crochet-accent text-white font-bold text-[9px] px-2.5 py-0.5 rounded-bl-xl uppercase tracking-wider">
-                Vuelta ${proj.currentRowIndex + 1}
+                Vuelta ${proj.currentRowIndex + 1} de ${totalRows}
               </div>
-              <div class="mt-1 text-sm font-bold text-neutral-800 dark:text-neutral-100 leading-relaxed" id="current-instruction-text">
+              <div class="mt-1 text-sm font-bold text-neutral-800 dark:text-neutral-100 leading-relaxed">
                 ${currentInstruction}
               </div>
-
-              <!-- Traductores rápidos en tiempo real -->
-              ${localTranslations.length > 0 ? `
-                <div class="mt-3 pt-2.5 border-t border-dashed border-crochet-200 dark:border-neutral-700">
-                  <span class="text-[9px] font-bold text-crochet-500 dark:text-crochet-300 uppercase tracking-wider block mb-1">Puntos Clave de esta vuelta:</span>
-                  <div class="flex flex-wrap gap-1">
-                    ${localTranslations.map(tr => `
-                      <span class="text-[11px] bg-crochet-100 dark:bg-neutral-700 border border-crochet-200 dark:border-neutral-600 px-2 py-0.5 rounded-lg text-crochet-700 dark:text-crochet-200 font-semibold cursor-help" onclick="showGlossaryDetail('${tr.us}')" title="${tr.desc}">
-                        ${tr.original} ➔ <span class="text-crochet-accent">${tr.translation}</span>
-                      </span>
-                    `).join('')}
-                  </div>
-                </div>
-              ` : ''}
             </div>
 
-            <!-- Siguiente vuelta (atenuada) -->
-            <div class="bg-white/50 dark:bg-neutral-800/40 text-neutral-400 dark:text-neutral-500 text-[11px] py-1.5 px-3 rounded-xl border border-neutral-100 dark:border-neutral-800/60 italic select-none">
-              <span class="font-bold text-[9px] uppercase text-neutral-300 dark:text-neutral-600">Siguiente (Vta ${proj.currentRowIndex + 2}):</span>
-              <p class="truncate">${nextInstruction || '-- Fin del patrón --'}</p>
+            <!-- Siguiente Vuelta -->
+            <div class="bg-white/50 dark:bg-neutral-800/40 text-neutral-400 text-[11px] py-1.5 px-3 rounded-xl border border-neutral-100 dark:border-neutral-800/60 italic truncate">
+              <span class="font-bold text-[9px] uppercase">Siguiente (Vta ${proj.currentRowIndex + 2}):</span> ${nextInstruction || '-- Fin del patrón --'}
             </div>
           </div>
 
-          <!-- SUB-CONTADOR AUXILIAR DE PUNTOS -->
-          <div class="bg-indigo-50 dark:bg-indigo-950/20 p-2.5 rounded-xl border border-indigo-100/80 dark:border-indigo-900/40 flex items-center justify-between transition-colors">
-            <div class="min-w-0 pr-2">
-              <span class="text-[11px] font-bold text-indigo-700 dark:text-indigo-400 uppercase tracking-wide block">Contador de Puntos Auxiliar</span>
-              <span class="text-[9px] text-indigo-500 dark:text-indigo-500/80 leading-none">Para secuencias dentro de esta vuelta</span>
+          <!-- CONTADOR AUXILIAR DE PUNTOS -->
+          <div class="bg-indigo-50 dark:bg-indigo-950/20 p-2.5 rounded-xl border border-indigo-100/80 dark:border-indigo-900/40 flex items-center justify-between">
+            <div>
+              <span class="text-[11px] font-bold text-indigo-700 dark:text-indigo-400 uppercase tracking-wide block">Contador de Puntos</span>
+              <span class="text-[9px] text-indigo-500">Puntos trabajados en esta vuelta</span>
             </div>
-            <div class="flex items-center gap-1.5 flex-shrink-0">
-              <button onclick="changeStitch(-1)" class="w-8 h-8 rounded-lg bg-white dark:bg-neutral-800 text-indigo-700 dark:text-indigo-300 font-bold shadow-sm border border-indigo-100 dark:border-indigo-900/30 flex items-center justify-center active:scale-90 transition-transform">-</button>
+            <div class="flex items-center gap-1.5">
+              <button onclick="changeStitch(-1)" class="w-8 h-8 rounded-lg bg-white dark:bg-neutral-800 text-indigo-700 dark:text-indigo-300 font-bold shadow border border-indigo-100 flex items-center justify-center active:scale-90">-</button>
               <span class="w-8 text-center font-extrabold text-indigo-850 dark:text-indigo-200 text-sm" id="stitch-count-val">${proj.currentStitchCount}</span>
-              <button onclick="changeStitch(1)" class="w-8 h-8 rounded-lg bg-white dark:bg-neutral-800 text-indigo-700 dark:text-indigo-300 font-bold shadow-sm border border-indigo-100 dark:border-indigo-900/30 flex items-center justify-center active:scale-90 transition-transform">+</button>
-              <button onclick="resetStitchCount()" class="p-1 text-indigo-400 dark:text-indigo-600 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors ml-1" title="Reiniciar puntos a 0">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 8H17" /></svg>
+              <button onclick="changeStitch(1)" class="w-8 h-8 rounded-lg bg-white dark:bg-neutral-800 text-indigo-700 dark:text-indigo-300 font-bold shadow border border-indigo-100 flex items-center justify-center active:scale-90">+</button>
+              <button onclick="resetStitchCount()" class="p-1 text-indigo-400 hover:text-indigo-600 ml-1" title="Reiniciar puntos">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 8H17"/></svg>
               </button>
             </div>
           </div>
 
-          <!-- BARRA DE PROGRESO -->
-          <div class="bg-white dark:bg-neutral-800 p-2.5 rounded-2xl border border-neutral-200 dark:border-neutral-700 shadow-sm my-1 transition-colors">
-            <div class="flex justify-between items-center text-xs font-bold text-neutral-500 dark:text-neutral-400 mb-0.5">
+          <!-- BARRA PROGRESO -->
+          <div class="bg-white dark:bg-neutral-800 p-2.5 rounded-2xl border border-neutral-200 dark:border-neutral-700 shadow-sm my-1">
+            <div class="flex justify-between items-center text-xs font-bold text-neutral-500 mb-0.5">
               <span>Progreso del Proyecto</span>
-              <span class="text-crochet-accent">${progressPercent}% completado</span>
+              <span class="text-crochet-accent">${progressPercent}%</span>
             </div>
             <div class="w-full bg-neutral-100 dark:bg-neutral-700 rounded-full h-2 overflow-hidden">
               <div class="bg-crochet-accent h-2 rounded-full transition-all duration-300" style="width: ${progressPercent}%"></div>
             </div>
-            <div class="flex justify-between text-[9px] text-neutral-400 dark:text-neutral-500 mt-1">
-              <span>Quedan: ${totalRows - proj.currentRowIndex} vueltas</span>
-              <span>Total: ${totalRows}</span>
-            </div>
           </div>
 
-          <!-- CONTADOR GIGANTE (Superficie Táctil Cómoda) -->
+          <!-- CONTADOR PRINCIPAL CÓMODO -->
           <div class="flex flex-col gap-1.5">
-            <!-- El Gran Botón de +1 -->
-            <button onclick="changeRow(1)" class="w-full bg-crochet-accent text-white py-5 rounded-3xl font-bold text-xl shadow-md hover:bg-crochet-accentHover active:scale-95 transition-all duration-150 flex flex-col items-center justify-center gap-0.5">
-              <span class="text-[10px] font-semibold uppercase tracking-widest text-crochet-100">Completar Vuelta</span>
+            <button onclick="changeRow(1)" class="w-full bg-crochet-accent text-white py-4 rounded-3xl font-bold text-xl shadow-md hover:bg-crochet-accentHover active:scale-95 transition-all flex flex-col items-center justify-center gap-0.5">
+              <span class="text-[10px] font-semibold uppercase tracking-widest text-crochet-100">Siguiente Vuelta</span>
               <div class="flex items-center gap-1.5">
                 <span class="text-2xl">+1</span>
-                <span class="text-xs font-medium opacity-80">(Ir a la ${proj.currentRowIndex + 2 <= totalRows ? proj.currentRowIndex + 2 : 'Fin'})</span>
               </div>
             </button>
 
-            <!-- Botones secundarios de ajuste -->
-            <div class="grid grid-cols-3 gap-1.5">
-              <button onclick="changeRow(-1)" class="bg-white dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 border border-neutral-200 dark:border-neutral-700 py-3 rounded-2xl text-xs font-bold hover:bg-neutral-50 dark:hover:bg-neutral-750 active:scale-95 transition-all flex items-center justify-center gap-1">
-                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+            <div class="grid grid-cols-2 gap-1.5">
+              <button onclick="changeRow(-1)" class="bg-white dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 border border-neutral-200 dark:border-neutral-700 py-2.5 rounded-2xl text-xs font-bold hover:bg-neutral-50 active:scale-95 transition-all">
                 Vuelta -1
               </button>
-              
-              <button onclick="resetRowCounter()" class="bg-white dark:bg-neutral-800 text-neutral-400 dark:text-neutral-500 border border-neutral-200 dark:border-neutral-700 py-3 rounded-2xl text-xs font-medium hover:text-red-500 active:scale-95 transition-all flex items-center justify-center gap-1">
-                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 8H17" /></svg>
+              <button onclick="resetRowCounter()" class="bg-white dark:bg-neutral-800 text-neutral-400 border border-neutral-200 dark:border-neutral-700 py-2.5 rounded-2xl text-xs font-medium hover:text-red-500 active:scale-95 transition-all">
                 Reiniciar
               </button>
-
-              <button onclick="showQuickJumpModal()" class="bg-white dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 border border-neutral-200 dark:border-neutral-700 py-3 rounded-2xl text-xs font-bold hover:bg-neutral-50 dark:hover:bg-neutral-750 active:scale-95 transition-all flex items-center justify-center gap-1">
-                Saltar a...
-              </button>
-            </div>
-          </div>
-
-          <!-- PANEL MODAL PARA NOTAS DEL PROYECTO -->
-          <div id="notes-panel" class="hidden absolute inset-0 bg-neutral-900/40 backdrop-blur-sm z-50 flex items-end justify-center">
-            <div class="bg-white dark:bg-neutral-800 w-full rounded-t-3xl p-6 space-y-4 max-h-[80%] overflow-y-auto shadow-2xl transition-colors">
-              <div class="flex justify-between items-center border-b border-neutral-100 dark:border-neutral-700 pb-3">
-                <h3 class="font-bold text-neutral-800 dark:text-neutral-100 text-base">Notas de "${proj.name}"</h3>
-                <button onclick="toggleNotesPanel()" class="text-neutral-400 hover:text-neutral-600">
-                  <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
-                </button>
-              </div>
-              <div>
-                <textarea id="live-proj-notes" class="w-full h-32 p-3 border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-750 text-neutral-800 dark:text-white rounded-2xl text-xs focus:outline-none focus:ring-2 focus:ring-crochet-accent" placeholder="Escribe tus notas aquí (se guardan solas)...">${proj.notes || ''}</textarea>
-              </div>
-              <button onclick="saveLiveNotes()" class="w-full bg-crochet-700 text-white py-3 rounded-2xl font-bold text-xs shadow hover:bg-crochet-800 transition-colors">
-                Guardar y Volver a Tejer
-              </button>
-            </div>
-          </div>
-
-          <!-- MODAL DE SALTO RÁPIDO DE VUELTA -->
-          <div id="jump-modal" class="hidden absolute inset-0 bg-neutral-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <div class="bg-white dark:bg-neutral-800 w-full max-w-xs rounded-2xl p-5 space-y-4 shadow-2xl transition-colors">
-              <h3 class="font-bold text-neutral-800 dark:text-neutral-100 text-sm text-center">Saltar a una vuelta</h3>
-              <div class="flex items-center justify-center gap-2">
-                <span class="text-xs font-semibold text-neutral-500 dark:text-neutral-400">Ir a la vuelta:</span>
-                <input type="number" id="jump-row-input" min="1" max="${totalRows}" value="${proj.currentRowIndex + 1}" class="w-20 text-center border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-750 text-neutral-800 dark:text-white rounded-xl px-2 py-1.5 font-bold focus:ring-2 focus:ring-crochet-accent">
-              </div>
-              <div class="flex gap-2">
-                <button onclick="toggleJumpModal()" class="flex-1 bg-neutral-100 dark:bg-neutral-700 text-neutral-500 dark:text-neutral-300 py-2 rounded-xl text-xs font-bold">Cancelar</button>
-                <button onclick="confirmQuickJump(${totalRows})" class="flex-1 bg-crochet-accent text-white py-2 rounded-xl text-xs font-bold">Ir ahora</button>
-              </div>
             </div>
           </div>
 
@@ -1139,7 +939,6 @@ Sew a nice wooden button to the end to close it!`,
       `;
     }
 
-    // --- ACCIONES DEL CONTADOR ---
     function changeRow(step) {
       const proj = projects.find(p => p.id === activeProjectId);
       if (!proj) return;
@@ -1147,325 +946,116 @@ Sew a nice wooden button to the end to close it!`,
       const newIndex = proj.currentRowIndex + step;
       if (newIndex >= 0 && newIndex <= proj.parsedRows.length) {
         proj.currentRowIndex = newIndex;
-        
-        // REINICIAR CONTADOR DE PUNTOS AUXILIAR al cambiar de vuelta
         proj.currentStitchCount = 0;
-        
         saveToStorage();
-        
-        if (newIndex === proj.parsedRows.length) {
-          showToast('🎉 ¡Felicidades! Has completado el patrón.');
-        } else {
-          showToast(`Vuelta ${newIndex + 1}`);
-        }
-        
+        syncWithCloud(true);
         switchView('active-project');
-      } else {
-        showToast('⚠️ Estás al principio o al final del patrón.');
       }
     }
 
-    // Controles de puntos auxiliares
     function changeStitch(step) {
       const proj = projects.find(p => p.id === activeProjectId);
       if (!proj) return;
-      
-      if (proj.currentStitchCount === undefined) proj.currentStitchCount = 0;
-      
-      const newStitches = proj.currentStitchCount + step;
+
+      const newStitches = (proj.currentStitchCount || 0) + step;
       if (newStitches >= 0) {
         proj.currentStitchCount = newStitches;
         saveToStorage();
-        
-        const countValueEl = document.getElementById('stitch-count-val');
-        if (countValueEl) {
-          countValueEl.innerText = newStitches;
-        }
+        const countVal = document.getElementById('stitch-count-val');
+        if (countVal) countVal.innerText = newStitches;
       }
     }
 
-    // Resetear contador de puntos a 0
     function resetStitchCount() {
       const proj = projects.find(p => p.id === activeProjectId);
       if (proj) {
         proj.currentStitchCount = 0;
         saveToStorage();
-        const countValueEl = document.getElementById('stitch-count-val');
-        if (countValueEl) {
-          countValueEl.innerText = 0;
-        }
-        showToast('Puntos reiniciados');
+        const countVal = document.getElementById('stitch-count-val');
+        if (countVal) countVal.innerText = 0;
       }
     }
 
     function resetRowCounter() {
-      if (confirm('¿Quieres reiniciar el contador al principio de este patrón?')) {
+      if (confirm('¿Reiniciar a la vuelta 1?')) {
         const proj = projects.find(p => p.id === activeProjectId);
         if (proj) {
           proj.currentRowIndex = 0;
-          proj.currentStitchCount = 0; // Reiniciamos también el auxiliar
+          proj.currentStitchCount = 0;
           saveToStorage();
-          showToast('Contador reiniciado a la vuelta 1');
+          syncWithCloud(true);
           switchView('active-project');
         }
       }
     }
 
-    function showQuickJumpModal() {
-      const modal = document.getElementById('jump-modal');
-      if (modal) modal.classList.remove('hidden');
-    }
-
-    function toggleJumpModal() {
-      const modal = document.getElementById('jump-modal');
-      if (modal) modal.classList.add('hidden');
-    }
-
-    function confirmQuickJump(maxRows) {
-      const input = document.getElementById('jump-row-input');
-      const targetRow = parseInt(input.value, 10);
-      
-      if (isNaN(targetRow) || targetRow < 1 || targetRow > maxRows) {
-        showToast(`⚠️ Ingresa un número de vuelta válido (1 a ${maxRows})`);
+    function speakInstruction(encodedText) {
+      if (!('speechSynthesis' in window)) {
+        showToast('⚠️ Tu navegador no soporta lectura por voz.');
         return;
       }
 
-      const proj = projects.find(p => p.id === activeProjectId);
-      if (proj) {
-        proj.currentRowIndex = targetRow - 1;
-        proj.currentStitchCount = 0; // Se resetea el auxiliar también al saltar
-        saveToStorage();
-        toggleJumpModal();
-        showToast(`Saltado a la Vuelta ${targetRow}`);
-        switchView('active-project');
+      if (isSpeaking) {
+        window.speechSynthesis.cancel();
+        isSpeaking = false;
+        return;
       }
+
+      const text = decodeURIComponent(encodedText);
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = 'es-ES';
+      utterance.rate = 0.9;
+
+      utterance.onend = () => { isSpeaking = false; };
+      utterance.onerror = () => { isSpeaking = false; };
+
+      isSpeaking = true;
+      window.speechSynthesis.speak(utterance);
+      showToast('🔊 Leyendo instrucción...');
     }
 
-    function toggleNotesPanel() {
-      const panel = document.getElementById('notes-panel');
-      if (panel) {
-        panel.classList.toggle('hidden');
-      }
-    }
-
-    function saveLiveNotes() {
-      const proj = projects.find(p => p.id === activeProjectId);
-      const text = document.getElementById('live-proj-notes').value.trim();
-      if (proj) {
-        proj.notes = text || 'Sin notas especiales.';
-        saveToStorage();
-        showToast('Notas guardadas');
-        toggleNotesPanel();
-        switchView('active-project');
-      }
-    }
-
-    // --- ANALIZADOR DE PALABRAS PARA TRADUCTOR INTEGRADO ---
-    function getLocalTranslations(instruction, appLang) {
-      if (!instruction) return [];
-      
-      const translationsFound = [];
-      const lowerInstruction = instruction.toLowerCase();
-
-      GLOSSARY.forEach(item => {
-        const patternToSearch = appLang === 'en' ? item.abUs : item.abEs;
-        const safeToken = patternToSearch.replace('/', '|').split('|').map(s => s.trim());
-        
-        let found = false;
-        safeToken.forEach(t => {
-          if (t.length > 0) {
-            const regex = new RegExp(`\\b${t}\\b`, 'i');
-            if (regex.test(lowerInstruction)) {
-              found = true;
-            }
-          }
-        });
-
-        if (found) {
-          translationsFound.push({
-            original: appLang === 'en' ? item.abUs.toUpperCase() : item.abEs.toUpperCase(),
-            translation: appLang === 'en' ? item.es : item.us,
-            us: item.us,
-            desc: item.desc
-          });
-        }
-      });
-
-      return translationsFound;
-    }
-
-
-    // --- VISTA 4: GLOSARIO E INFO (DICCIONARIO + CALCULADORA) ---
-    let currentGlossaryTab = 'points'; // 'points' o 'calc'
-
+    // VISTA 4: GLOSARIO Y GUÍAS
     function renderGlossaryView(container) {
       container.innerHTML = `
-        <div class="flex-1 flex flex-col h-[calc(100vh-140px)]">
-          <div class="mb-3">
-            <h2 class="text-lg font-bold text-neutral-700 dark:text-neutral-200">Glosario & Calculadora</h2>
-            <p class="text-xs text-neutral-400 dark:text-neutral-500">Consulta términos, grosores de lana y equivalencias.</p>
+        <div class="flex-1 flex flex-col h-[calc(100vh-140px)] overflow-y-auto no-scrollbar space-y-4">
+          <div>
+            <h2 class="text-lg font-bold text-neutral-700 dark:text-neutral-200">Glosario & Referencia</h2>
+            <p class="text-xs text-neutral-400">Guía de abreviaturas y medidas estándar.</p>
           </div>
 
-          <!-- Pestañas de Navegación del Glosario -->
-          <div class="flex border-b border-neutral-200 dark:border-neutral-700 mb-3 text-xs font-bold">
-            <button onclick="switchGlossaryTab('points')" id="tab-points" class="flex-1 py-2 border-b-2 text-center transition-all ${currentGlossaryTab === 'points' ? 'border-crochet-accent text-crochet-accent' : 'border-transparent text-neutral-400 dark:text-neutral-500'}">
-              📖 Diccionario Puntos
-            </button>
-            <button onclick="switchGlossaryTab('calc')" id="tab-calc" class="flex-1 py-2 border-b-2 text-center transition-all ${currentGlossaryTab === 'calc' ? 'border-crochet-accent text-crochet-accent' : 'border-transparent text-neutral-400 dark:text-neutral-500'}">
-              📐 Agujas y Lanas
-            </button>
-          </div>
-
-          <!-- Contenido de la pestaña de Puntos -->
-          <div id="glossary-points-content" class="${currentGlossaryTab === 'points' ? '' : 'hidden'} flex flex-col flex-1">
-            <!-- Buscador -->
-            <div class="mb-3 relative">
-              <input type="text" id="glossary-search" oninput="searchGlossary()" placeholder="Escribe 'pb', 'sc', 'aumento'..." class="w-full pl-9 pr-3 py-2 border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-850 text-neutral-800 dark:text-white rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-crochet-accent">
-              <svg class="w-4 h-4 text-neutral-400 absolute left-3 top-3" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-            </div>
-
-            <!-- Lista del glosario -->
-            <div class="space-y-2 flex-1 overflow-y-auto no-scrollbar max-h-[calc(100vh-320px)]" id="glossary-list">
-              <!-- Dinámico -->
-            </div>
-          </div>
-
-          <!-- Contenido de la pestaña de Lanas y Agujas (Calculadora) -->
-          <div id="glossary-calc-content" class="${currentGlossaryTab === 'calc' ? '' : 'hidden'} space-y-4 flex-1 overflow-y-auto no-scrollbar max-h-[calc(100vh-250px)]">
-            
-            <!-- Conversor Agujas -->
-            <div class="bg-white dark:bg-neutral-800 p-3.5 rounded-2xl border border-neutral-200 dark:border-neutral-700 shadow-sm space-y-2 transition-colors">
-              <h3 class="font-bold text-xs text-neutral-700 dark:text-neutral-200 uppercase tracking-wide border-b border-neutral-100 dark:border-neutral-700 pb-1.5 flex items-center gap-1.5">
-                <span>📍 Equivalencia de Agujas</span>
-              </h3>
-              <div class="overflow-x-auto">
-                <table class="w-full text-left text-[11px] border-collapse">
-                  <thead>
-                    <tr class="text-neutral-400 dark:text-neutral-500 font-bold border-b border-neutral-100 dark:border-neutral-700">
-                      <th class="pb-1">Métrico</th>
-                      <th class="pb-1">EE.UU. (US)</th>
-                      <th class="pb-1">Reino Unido (UK)</th>
-                    </tr>
-                  </thead>
-                  <tbody class="divide-y divide-neutral-100 dark:divide-neutral-700 text-neutral-700 dark:text-neutral-300">
-                    ${NEEDLE_CONVERSIONS.map(n => `
-                      <tr>
-                        <td class="py-1 font-bold text-crochet-700 dark:text-crochet-300">${n.metric}</td>
-                        <td class="py-1">${n.us}</td>
-                        <td class="py-1">${n.uk}</td>
-                      </tr>
-                    `).join('')}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-            <!-- Tabla de Grosores de Lana -->
-            <div class="bg-white dark:bg-neutral-800 p-3.5 rounded-2xl border border-neutral-200 dark:border-neutral-700 shadow-sm space-y-2 transition-colors">
-              <h3 class="font-bold text-xs text-neutral-700 dark:text-neutral-200 uppercase tracking-wide border-b border-neutral-100 dark:border-neutral-700 pb-1.5 flex items-center gap-1.5">
-                <span>🧶 Guía de Grosores de Lana</span>
-              </h3>
-              <div class="space-y-2">
-                ${YARN_WEIGHTS.map(y => `
-                  <div class="p-2 bg-neutral-50 dark:bg-neutral-750 rounded-xl border border-neutral-100 dark:border-neutral-700/60 text-[11px] space-y-0.5">
-                    <div class="flex justify-between font-bold">
-                      <span class="text-neutral-800 dark:text-neutral-200">
-                        <span class="inline-block w-4 h-4 rounded-full bg-crochet-accent text-white text-[10px] text-center leading-4 mr-1">${y.number}</span>
-                        ${y.category} (${y.name})
-                      </span>
-                    </div>
-                    <div class="text-neutral-500 dark:text-neutral-400 flex justify-between">
-                      <span>Agujas: <strong class="text-crochet-600 dark:text-crochet-300 font-semibold">${y.mm}</strong></span>
-                      <span>EE.UU: <strong class="text-neutral-600 dark:text-neutral-300 font-semibold">${y.us}</strong></span>
-                    </div>
+          <!-- TABLA GLOSARIO -->
+          <div class="bg-white dark:bg-neutral-800 p-3.5 rounded-2xl border border-neutral-200 dark:border-neutral-700 shadow-sm space-y-2">
+            <h3 class="font-bold text-xs text-neutral-700 dark:text-neutral-200 uppercase tracking-wide border-b pb-1.5">Diccionario de Puntos</h3>
+            <div class="space-y-2">
+              ${GLOSSARY.map(item => `
+                <div class="p-2 bg-neutral-50 dark:bg-neutral-750 rounded-xl border border-neutral-100 dark:border-neutral-700 text-xs">
+                  <div class="flex justify-between font-bold text-crochet-700 dark:text-crochet-300">
+                    <span>${item.abEs.toUpperCase()} (${item.es})</span>
+                    <span class="text-neutral-400">${item.abUs.toUpperCase()} (${item.us})</span>
                   </div>
-                `).join('')}
-              </div>
+                  <p class="text-[11px] text-neutral-500 mt-0.5">${item.desc}</p>
+                </div>
+              `).join('')}
             </div>
+          </div>
 
+          <!-- TABLA GROSORES -->
+          <div class="bg-white dark:bg-neutral-800 p-3.5 rounded-2xl border border-neutral-200 dark:border-neutral-700 shadow-sm space-y-2">
+            <h3 class="font-bold text-xs text-neutral-700 dark:text-neutral-200 uppercase tracking-wide border-b pb-1.5">Grosores de Lana</h3>
+            <div class="space-y-1.5">
+              ${YARN_WEIGHTS.map(y => `
+                <div class="p-2 bg-neutral-50 dark:bg-neutral-750 rounded-xl text-xs flex justify-between items-center">
+                  <div>
+                    <span class="font-bold text-neutral-800 dark:text-neutral-200">${y.number}. ${y.category}</span>
+                    <p class="text-[10px] text-neutral-400">${y.name}</p>
+                  </div>
+                  <span class="font-semibold text-crochet-600 dark:text-crochet-300 text-[11px]">${y.mm}</span>
+                </div>
+              `).join('')}
+            </div>
           </div>
         </div>
       `;
-
-      if (currentGlossaryTab === 'points') {
-        displayGlossaryItems(GLOSSARY);
-      }
-    }
-
-    function switchGlossaryTab(tab) {
-      currentGlossaryTab = tab;
-      const mainEl = document.getElementById('app-content');
-      renderGlossaryView(mainEl);
-    }
-
-    function displayGlossaryItems(itemsList) {
-      const listEl = document.getElementById('glossary-list');
-      if (!listEl) return;
-
-      listEl.innerHTML = '';
-
-      if (itemsList.length === 0) {
-        listEl.innerHTML = `
-          <div class="text-center py-10 text-neutral-400 text-xs">
-            No se encontraron puntos con ese nombre.
-          </div>
-        `;
-        return;
-      }
-
-      itemsList.forEach(item => {
-        const itemEl = document.createElement('div');
-        itemEl.className = "bg-white dark:bg-neutral-800 p-3.5 rounded-xl border border-neutral-200 dark:border-neutral-700/80 shadow-sm space-y-1 transition-colors";
-        itemEl.innerHTML = `
-          <div class="flex justify-between items-center">
-            <div class="flex items-center gap-1.5">
-              <span class="text-xs bg-crochet-accent/10 text-crochet-accent font-bold px-2 py-0.5 rounded-lg uppercase">${item.abUs}</span>
-              <span class="text-xs text-neutral-300 dark:text-neutral-600">➔</span>
-              <span class="text-xs bg-emerald-100 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 font-bold px-2 py-0.5 rounded-lg uppercase">${item.abEs}</span>
-            </div>
-          </div>
-          <div class="grid grid-cols-2 gap-2 pt-1 text-xs">
-            <div>
-              <p class="text-[10px] font-bold text-neutral-400 dark:text-neutral-500 uppercase">Inglés (US)</p>
-              <p class="font-semibold text-neutral-700 dark:text-neutral-300 capitalize">${item.us}</p>
-            </div>
-            <div>
-              <p class="text-[10px] font-bold text-neutral-400 dark:text-neutral-500 uppercase">Español (ES)</p>
-              <p class="font-semibold text-neutral-700 dark:text-neutral-300 capitalize">${item.es}</p>
-            </div>
-          </div>
-          <p class="text-[11px] text-neutral-500 dark:text-neutral-400 leading-normal pt-1 border-t border-neutral-50 dark:border-neutral-700/50">${item.desc}</p>
-        `;
-        listEl.appendChild(itemEl);
-      });
-    }
-
-    function searchGlossary() {
-      const query = document.getElementById('glossary-search').value.toLowerCase().trim();
-      if (!query) {
-        displayGlossaryItems(GLOSSARY);
-        return;
-      }
-
-      const filtered = GLOSSARY.filter(item => {
-        return item.us.toLowerCase().includes(query) ||
-               item.es.toLowerCase().includes(query) ||
-               item.abUs.toLowerCase().includes(query) ||
-               item.abEs.toLowerCase().includes(query);
-      });
-
-      displayGlossaryItems(filtered);
-    }
-
-    // Detalle interactivo desde el panel de tejer
-    function showGlossaryDetail(usName) {
-      currentGlossaryTab = 'points';
-      switchView('glossary');
-      const searchInput = document.getElementById('glossary-search');
-      if (searchInput) {
-        searchInput.value = usName;
-        searchGlossary();
-      }
     }
   </script>
 </body>
