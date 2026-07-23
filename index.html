@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>TejeFácil - Tu Compañero de Crochet y Contador de Vueltas</title>
-
+  <title>TejeFácil - Tu Contador de Vueltas de Crochet</title>
+  
   <!-- Configuración PWA -->
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#e89a8a">
@@ -14,7 +14,7 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- PDF.js para leer archivos PDF en local -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-
+  
   <script>
     tailwind.config = {
       darkMode: 'class',
@@ -43,21 +43,14 @@
     .no-scrollbar::-webkit-scrollbar { display: none; }
     .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     .transition-all-300 { transition: all 0.3s ease; }
-    /* Animación de pulso para dictado de voz */
-    @keyframes pulse-ring {
-      0% { transform: scale(0.95); opacity: 0.8; }
-      50% { transform: scale(1.08); opacity: 1; }
-      100% { transform: scale(0.95); opacity: 0.8; }
-    }
-    .speaking-pulse { animation: pulse-ring 1.5s infinite ease-in-out; }
   </style>
 </head>
 <body class="bg-crochet-50 dark:bg-neutral-950 text-neutral-800 dark:text-neutral-100 font-sans min-h-screen flex flex-col selection:bg-crochet-accent selection:text-white transition-colors duration-300">
 
-  <!-- APP CONTAINER -->
+  <!-- CONTENEDOR PRINCIPAL -->
   <div class="max-w-md w-full mx-auto bg-crochet-100 dark:bg-neutral-900 min-h-screen flex flex-col shadow-2xl relative pb-20 transition-colors duration-300">
-
-    <!-- HEADER -->
+    
+    <!-- ENCABEZADO -->
     <header class="bg-white dark:bg-neutral-850 border-b border-crochet-200 dark:border-neutral-800 px-4 py-3 sticky top-0 z-40 flex items-center justify-between shadow-sm transition-colors duration-300">
       <div class="flex items-center gap-2 cursor-pointer" onclick="switchView('projects')">
         <svg class="w-8 h-8 text-crochet-accent" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -71,18 +64,18 @@
           <h1 class="text-xl font-extrabold text-crochet-700 dark:text-crochet-300 leading-tight">TejeFácil</h1>
           <div class="flex items-center gap-1.5">
             <span class="text-[10px] text-crochet-500 dark:text-neutral-400 font-semibold">Ganchillo Paso a Paso</span>
-            <!-- Indicador Estado Nube -->
-            <span id="cloud-status-badge" class="inline-flex items-center gap-1 text-[9px] px-1.5 py-0.2 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 font-bold" title="Estado de Sincronización Nube">
-              <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Offline
+            <!-- Indicador Estado Nube / Conexión -->
+            <span id="cloud-status-badge" class="inline-flex items-center gap-1 text-[9px] px-1.5 py-0.5 rounded-full font-bold transition-all" title="Estado de Red y Sincronización">
+              <span class="w-1.5 h-1.5 rounded-full bg-neutral-400"></span> Comprobando...
             </span>
           </div>
         </div>
       </div>
-
-      <!-- CONTROLES HEADER -->
+      
+      <!-- CONTROLES -->
       <div class="flex items-center gap-1.5">
-        <!-- Botón Configuración Nube / Google Sheets -->
-        <button onclick="toggleCloudSettingsModal()" class="p-2 rounded-xl bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 hover:text-crochet-accent transition-colors" title="Sincronizar con Google Sheets">
+        <!-- Botón Configuración Nube -->
+        <button onclick="toggleCloudSettingsModal()" class="p-2 rounded-xl bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 hover:text-crochet-accent transition-colors" title="Ajustes de Sincronización Nube">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" d="M3 15a4 4 0 004 4h9a5 5 0 001-9.999 5.002 5.002 0 00-9.78 2.096A4.001 4.001 0 003 15z" />
           </svg>
@@ -107,12 +100,12 @@
       </div>
     </header>
 
-    <!-- ÁREA PRINCIPAL -->
+    <!-- ÁREA PRINCIPAL DE CONTENIDO -->
     <main class="flex-1 p-4 flex flex-col justify-between" id="app-content">
       <!-- Inyección dinámica de vistas -->
     </main>
 
-    <!-- TOAST NOTIFICACIONES -->
+    <!-- NOTIFICACIONES TOAST -->
     <div id="toast" class="fixed bottom-24 left-1/2 -translate-x-1/2 bg-neutral-900/95 text-white text-xs py-2.5 px-4 rounded-xl shadow-xl transition-all duration-300 transform translate-y-10 opacity-0 pointer-events-none z-50 flex items-center gap-2 max-w-[90%] text-center border border-neutral-700">
       <span id="toast-text">¡Guardado correctamente!</span>
     </div>
@@ -123,7 +116,7 @@
         <div class="flex justify-between items-center border-b border-neutral-100 dark:border-neutral-700 pb-2">
           <div class="flex items-center gap-2">
             <span class="text-xl">☁️</span>
-            <h3 class="font-bold text-neutral-800 dark:text-neutral-100 text-sm">Sincronización Google Sheets</h3>
+            <h3 class="font-bold text-neutral-800 dark:text-neutral-100 text-sm">Sincronización Nube</h3>
           </div>
           <button onclick="toggleCloudSettingsModal()" class="text-neutral-400 hover:text-neutral-600">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
@@ -131,7 +124,7 @@
         </div>
 
         <p class="text-[11px] text-neutral-500 dark:text-neutral-400 leading-relaxed">
-          Pega aquí la URL de tu Web App de Google Apps Script (GAS). De esta forma, tus patrones estarán siempre sincronizados entre tu ordenador y móvil.
+          Sincroniza tus patrones entre tu ordenador y tu móvil utilizando tu Hoja de Cálculo de Google.
         </p>
 
         <div>
@@ -139,13 +132,28 @@
           <input type="url" id="gas-url-input" placeholder="https://script.google.com/macros/s/.../exec" class="w-full px-3 py-2 border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-750 text-neutral-800 dark:text-white rounded-xl text-xs focus:ring-2 focus:ring-crochet-accent focus:outline-none">
         </div>
 
-        <div class="flex gap-2 pt-2">
-          <button onclick="syncWithCloud()" class="flex-1 bg-emerald-600 text-white py-2.5 rounded-xl font-bold text-xs shadow hover:bg-emerald-700 transition-colors flex items-center justify-center gap-1">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 8H17"/></svg>
-            Sincronizar Ahora
-          </button>
-          <button onclick="saveCloudUrl()" class="flex-1 bg-crochet-accent text-white py-2.5 rounded-xl font-bold text-xs shadow hover:bg-crochet-accentHover transition-colors">
-            Guardar URL
+        <!-- OPCIONES DE SINCRONIZACIÓN (SUBIR / DESCARGAR) -->
+        <div class="space-y-2 pt-1">
+          <span class="text-[10px] font-bold text-neutral-400 uppercase block">Acciones Manuales Nube:</span>
+          <div class="grid grid-cols-2 gap-2">
+            <button onclick="downloadFromCloud()" class="bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 border border-indigo-100 dark:border-indigo-900/40 py-2.5 rounded-xl font-bold text-xs shadow-sm hover:bg-indigo-100 transition-colors flex items-center justify-center gap-1">
+              📥 Descargar Nube
+            </button>
+            <button onclick="uploadToCloud()" class="bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-100 dark:border-emerald-900/40 py-2.5 rounded-xl font-bold text-xs shadow-sm hover:bg-emerald-100 transition-colors flex items-center justify-center gap-1">
+              📤 Subir a Nube
+            </button>
+          </div>
+        </div>
+
+        <!-- ZONA DE PELIGRO: BORRAR DATOS LOCALES -->
+        <div class="pt-3 border-t border-neutral-100 dark:border-neutral-700 space-y-2">
+          <div class="flex justify-between items-center">
+            <button onclick="saveCloudUrl()" class="w-full bg-crochet-accent text-white py-2.5 rounded-xl font-bold text-xs shadow hover:bg-crochet-accentHover transition-colors mb-2">
+              Guardar URL de GAS
+            </button>
+          </div>
+          <button onclick="clearLocalDataOnly()" class="w-full bg-red-50 dark:bg-red-950/30 text-red-600 dark:text-red-400 border border-red-100 dark:border-red-900/30 py-2 rounded-xl font-bold text-[11px] hover:bg-red-100 transition-colors flex items-center justify-center gap-1">
+            🗑️ Borrar Todo de este Dispositivo
           </button>
         </div>
       </div>
@@ -210,7 +218,7 @@
       </div>
     </div>
 
-    <!-- MENÚ NAVEGACIÓN INFERIOR -->
+    <!-- MENÚ DE NAVEGACIÓN INFERIOR -->
     <nav class="fixed bottom-0 left-1/2 -translate-x-1/2 max-w-md w-full bg-white dark:bg-neutral-850 border-t border-crochet-200 dark:border-neutral-800 py-2 px-6 flex justify-around items-center z-40 shadow-lg transition-colors duration-300">
       <button onclick="switchView('projects')" id="nav-projects" class="flex flex-col items-center gap-1 text-crochet-accent font-semibold transition-all-300">
         <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -218,7 +226,7 @@
         </svg>
         <span class="text-[10px]">Mis Patrones</span>
       </button>
-
+      
       <button onclick="switchView('editor')" id="nav-editor" class="flex flex-col items-center gap-1 text-neutral-400 font-medium transition-all-300">
         <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -237,38 +245,35 @@
 
   <!-- LÓGICA JAVASCRIPT -->
   <script>
-    // Registro del Service Worker para PWA Offline
+    // Service Worker PWA
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('sw.js').then(reg => {
-          console.log('Service Worker cargado correctamente');
-        }).catch(err => {
-          console.warn('Error con Service Worker:', err);
-        });
+          console.log('Service Worker registrado');
+        }).catch(err => console.warn('Service Worker err:', err));
       });
     }
 
-    // PDF.js
+    // PDF.js Config
     const pdfjsLib = window['pdfjs-dist/build/pdf'];
     if (pdfjsLib) {
       pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
     }
 
-    // ESTADO GLOBAL DE LA APLICACIÓN
+    // ESTADO GLOBAL
     let projects = [];
     let activeProjectId = null;
     let currentView = 'projects';
     let gasWebAppUrl = '';
-
-    // Configs
+    
+    // Configs adicionales
     let isDarkMode = false;
     let stretchActive = false;
     let stretchIntervalMins = 30;
     let lastStretchCheckTime = Date.now();
     let stretchMonitorInterval = null;
-    let isSpeaking = false;
 
-    // Glosario de Crochet
+    // Glosario
     const GLOSSARY = [
       { us: 'chain', es: 'cadeneta', abUs: 'ch', abEs: 'cad', desc: 'Punto de inicio básico.' },
       { us: 'single crochet', es: 'punto bajo / medio punto', abUs: 'sc', abEs: 'pb / mp', desc: 'Punto básico corto y denso.' },
@@ -280,35 +285,14 @@
       { us: 'decrease', es: 'disminución', abUs: 'dec', abEs: 'dism', desc: 'Tejer dos puntos juntos para reducir.' },
       { us: 'magic ring', es: 'anillo mágico', abUs: 'mr', abEs: 'am', desc: 'Bucle ajustable para tejer en redondo.' },
       { us: 'round', es: 'vuelta / ronda', abUs: 'rnd', abEs: 'vta', desc: 'Una vuelta completa en tejido circular.' },
-      { us: 'row', es: 'fila / hilera', abUs: 'row', abEs: 'fil', desc: 'Una pasada en tejido plano de ida y vuelta.' },
-      { us: 'front loop only', es: 'solo hebra delantera', abUs: 'flo', abEs: 'shd', desc: 'Tejer tomando solo la parte frontal.' },
-      { us: 'back loop only', es: 'solo hebra trasera', abUs: 'blo', abEs: 'sht', desc: 'Tejer tomando solo la parte trasera.' }
-    ];
-
-    const YARN_WEIGHTS = [
-      { number: '0', category: 'Lace', name: 'Encaje / Superfina', mm: '1.5 - 2.25 mm', us: 'US 000 a 1' },
-      { number: '1', category: 'Super Fine', name: 'Fingering / Calcetines', mm: '2.25 - 3.25 mm', us: 'US 1 a 3' },
-      { number: '2', category: 'Fine', name: 'Sport / Bebé', mm: '3.25 - 3.75 mm', us: 'US 3 a 5' },
-      { number: '3', category: 'Light', name: 'DK / Light Worsted', mm: '3.75 - 4.5 mm', us: 'US 5 a 7' },
-      { number: '4', category: 'Medium', name: 'Worsted / Aran', mm: '4.5 - 5.5 mm', us: 'US 7 a I-9' },
-      { number: '5', category: 'Bulky', name: 'Chunky / Gruesa', mm: '5.5 - 8.0 mm', us: 'US I-9 a L-11' },
-      { number: '6', category: 'Super Bulky', name: 'Super Chunky', mm: '8.0 - 12.0 mm', us: 'US L-11 a P-16' }
+      { us: 'row', es: 'fila / hilera', abUs: 'row', abEs: 'fil', desc: 'Una pasada en tejido plano de ida y vuelta.' }
     ];
 
     const SAMPLE_PROJECTS = [
       {
         id: 'sample-pulpito',
         name: '🐙 Mini Pulpito Amigurumi',
-        rawPattern: `Anillo Mágico de 6 puntos (6)
-Vta 2: 6 aum (12 pb)
-Vta 3: (1 pb, 1 aum) x 6 (18 pb)
-Vta 4: (2 pb, 1 aum) x 6 (24 pb)
-Vta 5 a 9: 24 pb (5 vueltas)
-Vta 10: (2 pb, 1 dism) x 6 (18 pb)
-Vta 11: (1 pb, 1 dism) x 6 (12 pb)
-Rellenar firmemente con algodón sintético
-Vta 12: 6 dism (6 pb)
-Cerrar el tejido y rematar hebra.`,
+        rawPattern: `Anillo Mágico de 6 puntos (6)\nVta 2: 6 aum (12 pb)\nVta 3: (1 pb, 1 aum) x 6 (18 pb)\nVta 4: (2 pb, 1 aum) x 6 (24 pb)\nVta 5 a 9: 24 pb (5 vueltas)\nVta 10: (2 pb, 1 dism) x 6 (18 pb)\nVta 11: (1 pb, 1 dism) x 6 (12 pb)\nRellenar firmemente con algodón sintético\nVta 12: 6 dism (6 pb)\nCerrar el tejido y rematar hebra.`,
         parsedRows: [
           "Anillo Mágico de 6 puntos (6)",
           "Vta 2: 6 aum (12 pb)",
@@ -343,21 +327,36 @@ Cerrar el tejido y rematar hebra.`,
       if (projects.length > 0 && !activeProjectId) {
         activeProjectId = projects[0].id;
       }
-
+      
       applyTheme();
       updateCloudStatusBadge();
+      initNetworkListeners();
       updateStretchTimerUI();
       initStretchMonitor();
 
-      // Intentar sincronizar si hay URL guardada
-      if (gasWebAppUrl) {
-        syncWithCloud(true);
+      // Autodescarga silenciosa al abrir si hay conexión
+      if (gasWebAppUrl && navigator.onLine) {
+        downloadFromCloud(true);
       }
 
       switchView('projects');
     });
 
-    // ALMACENAMIENTO LOCAL & NUBE
+    // DETECTOR EN TIEMPO REAL DE CONEXIÓN
+    function initNetworkListeners() {
+      window.addEventListener('online', () => {
+        updateCloudStatusBadge();
+        showToast('🟢 ¡Conexión restablecida! Conectado a la red.');
+        if (gasWebAppUrl) downloadFromCloud(true);
+      });
+
+      window.addEventListener('offline', () => {
+        updateCloudStatusBadge();
+        showToast('🔴 Sin conexión a Internet. Modo Offline activo.');
+      });
+    }
+
+    // ALMACENAMIENTO LOCAL
     function saveToStorage() {
       localStorage.setItem('tejefacil_projects', JSON.stringify(projects));
       if (activeProjectId) localStorage.setItem('tejefacil_active_id', activeProjectId);
@@ -370,17 +369,50 @@ Cerrar el tejido y rematar hebra.`,
     function loadFromStorage() {
       const stored = localStorage.getItem('tejefacil_projects');
       if (stored) projects = JSON.parse(stored);
-
+      
       const storedActive = localStorage.getItem('tejefacil_active_id');
       if (storedActive) activeProjectId = storedActive;
-
+      
       isDarkMode = localStorage.getItem('tejefacil_darkmode') === 'true';
       gasWebAppUrl = localStorage.getItem('tejefacil_gas_url') || '';
       stretchActive = localStorage.getItem('tejefacil_stretch_active') === 'true';
       stretchIntervalMins = parseInt(localStorage.getItem('tejefacil_stretch_interval') || '30', 10);
     }
 
-    // SINCRONIZACIÓN GOOGLE SHEETS (GAS)
+    // BORRAR TODO DEL DISPOSITIVO LOCAL
+    function clearLocalDataOnly() {
+      if (confirm('⚠️ ¿Seguro que quieres borrar todos los patrones guardados EN ESTE DISPOSITIVO?\n\n(No se borrará nada de tu Google Sheet si lo tienes vinculado).')) {
+        projects = [];
+        activeProjectId = null;
+        localStorage.removeItem('tejefacil_projects');
+        localStorage.removeItem('tejefacil_active_id');
+        showToast('🗑️ Datos del dispositivo borrados');
+        toggleCloudSettingsModal();
+        switchView('projects');
+      }
+    }
+
+    // CONTROL DEL BADGE DE ESTADO
+    function updateCloudStatusBadge() {
+      const badge = document.getElementById('cloud-status-badge');
+      if (!badge) return;
+
+      if (!navigator.onLine) {
+        badge.className = "inline-flex items-center gap-1 text-[9px] px-1.5 py-0.5 rounded-full bg-red-100 dark:bg-red-950 text-red-700 dark:text-red-300 font-bold";
+        badge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-red-500"></span> Sin Red`;
+        return;
+      }
+
+      if (gasWebAppUrl) {
+        badge.className = "inline-flex items-center gap-1 text-[9px] px-1.5 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 font-bold";
+        badge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Nube Ok`;
+      } else {
+        badge.className = "inline-flex items-center gap-1 text-[9px] px-1.5 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-300 font-bold";
+        badge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span> Modo Local`;
+      }
+    }
+
+    // AJUSTES NUBE
     function toggleCloudSettingsModal() {
       const modal = document.getElementById('cloud-modal');
       const urlInput = document.getElementById('gas-url-input');
@@ -399,34 +431,58 @@ Cerrar el tejido y rematar hebra.`,
       }
     }
 
-    function updateCloudStatusBadge() {
-      const badge = document.getElementById('cloud-status-badge');
-      if (!badge) return;
-
-      if (gasWebAppUrl) {
-        badge.className = "inline-flex items-center gap-1 text-[9px] px-1.5 py-0.2 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 font-bold";
-        badge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Google Sheet`;
-      } else {
-        badge.className = "inline-flex items-center gap-1 text-[9px] px-1.5 py-0.2 rounded-full bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-300 font-bold";
-        badge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span> Modo Local`;
-      }
-    }
-
-    async function syncWithCloud(silent = false) {
+    // ACCIÓN 1: DESCARGAR DE LA NUBE
+    async function downloadFromCloud(silent = false) {
       if (!gasWebAppUrl) {
         if (!silent) showToast('⚠️ Configura primero tu URL de Google Apps Script');
         return;
       }
 
       if (!navigator.onLine) {
-        if (!silent) showToast('📡 Estás sin conexión. Se guardará localmente.');
+        if (!silent) showToast('📡 Estás sin conexión a internet.');
         return;
       }
 
       try {
-        if (!silent) showToast('⏳ Sincronizando con Google Sheets...');
+        if (!silent) showToast('⏳ Descargando patrones de tu Google Sheet...');
+        
+        const response = await fetch(gasWebAppUrl);
+        const data = await response.json();
 
-        // 1. Enviar datos locales
+        if (data && data.status === 'success' && Array.isArray(data.projects)) {
+          if (data.projects.length > 0) {
+            projects = data.projects;
+            if (!activeProjectId || !projects.some(p => p.id === activeProjectId)) {
+              activeProjectId = projects[0].id;
+            }
+            saveToStorage();
+            if (!silent) showToast('📥 Patrones descargados e integrados');
+            if (currentView === 'projects') renderProjectsView(document.getElementById('app-content'));
+          } else {
+            if (!silent) showToast('ℹ️ Tu Google Sheet no tiene patrones guardados');
+          }
+        }
+      } catch (err) {
+        console.warn('Error al descargar de la nube:', err);
+        if (!silent) showToast('⚠️ Error al descargar datos de la nube');
+      }
+    }
+
+    // ACCIÓN 2: SUBIR A LA NUBE
+    async function uploadToCloud(silent = false) {
+      if (!gasWebAppUrl) {
+        if (!silent) showToast('⚠️ Configura primero tu URL de Google Apps Script');
+        return;
+      }
+
+      if (!navigator.onLine) {
+        if (!silent) showToast('📡 Estás sin conexión a internet.');
+        return;
+      }
+
+      try {
+        if (!silent) showToast('⏳ Subiendo tus patrones a Google Sheet...');
+
         await fetch(gasWebAppUrl, {
           method: 'POST',
           mode: 'no-cors',
@@ -434,25 +490,35 @@ Cerrar el tejido y rematar hebra.`,
           body: JSON.stringify({ projects: projects })
         });
 
-        // 2. Obtener datos actualizados de la nube
-        const response = await fetch(gasWebAppUrl);
-        const data = await response.json();
-
-        if (data && data.status === 'success' && Array.isArray(data.projects)) {
-          if (data.projects.length > 0) {
-            projects = data.projects;
-            saveToStorage();
-            if (!silent) showToast('✅ ¡Sincronizado con tu Hoja de Cálculo!');
-            if (currentView === 'projects') renderProjectsView(document.getElementById('app-content'));
-          }
-        }
+        if (!silent) showToast('📤 Patrones enviados a la nube correctamente');
       } catch (err) {
-        console.warn('Error en sync cloud:', err);
-        if (!silent) showToast('⚠️ Conectado en local. Sincronizará al volver la conexión.');
+        console.warn('Error al subir a la nube:', err);
+        if (!silent) showToast('⚠️ Error al subir a la nube');
       }
     }
 
-    // TEMA Y ESTIRAMIENTOS
+    // SINCRONIZACIÓN RÁPIDA DE PASOS EN SEGUNDO PLANO
+    async function syncProgressInBackground(projId, rowIndex, stitchCount) {
+      if (!gasWebAppUrl || !navigator.onLine) return;
+
+      try {
+        await fetch(gasWebAppUrl, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'updateProgress',
+            id: projId,
+            currentRowIndex: rowIndex,
+            currentStitchCount: stitchCount
+          })
+        });
+      } catch (e) {
+        // Fallo silencioso en segundo plano, se mantiene en localStorage
+      }
+    }
+
+    // TEMAS Y SALUD
     function toggleDarkMode() {
       isDarkMode = !isDarkMode;
       applyTheme();
@@ -464,7 +530,7 @@ Cerrar el tejido y rematar hebra.`,
       const htmlEl = document.documentElement;
       const sunIcon = document.getElementById('sun-icon');
       const moonIcon = document.getElementById('moon-icon');
-
+      
       if (isDarkMode) {
         htmlEl.classList.add('dark');
         if (sunIcon) sunIcon.classList.add('hidden');
@@ -505,7 +571,7 @@ Cerrar el tejido y rematar hebra.`,
       const checkbox = document.getElementById('stretch-active-toggle');
       const select = document.getElementById('stretch-time-select');
       const countEl = document.getElementById('stretch-countdown-text');
-
+      
       if (checkbox) checkbox.checked = stretchActive;
       if (select) select.value = stretchIntervalMins;
       if (countEl) countEl.innerText = stretchActive ? `Aviso cada ${stretchIntervalMins} min.` : 'Temporizador apagado';
@@ -529,7 +595,7 @@ Cerrar el tejido y rematar hebra.`,
       lastStretchCheckTime = Date.now();
     }
 
-    // PARSER INTELIGENTE DE PATRONES
+    // PARSER INTELIGENTE
     function autoDetectLanguage(text) {
       const engKeywords = ['sc', 'ch', 'dc', 'hdc', 'inc', 'dec', 'st', 'sts', 'sl st', 'mr', 'rnd', 'turn'];
       const espKeywords = ['pb', 'cad', 'pa', 'mpa', 'aum', 'dism', 'pt', 'pts', 'pr', 'pe', 'am', 'vta'];
@@ -578,11 +644,11 @@ Cerrar el tejido y rematar hebra.`,
       return processedRows;
     }
 
-    // NAVEGACIÓN Y ENRUTADOR
+    // ENRUTADOR
     function switchView(viewName) {
       currentView = viewName;
       const mainEl = document.getElementById('app-content');
-
+      
       const sPanel = document.getElementById('stretch-settings-panel');
       if (sPanel) sPanel.classList.add('hidden');
 
@@ -590,7 +656,7 @@ Cerrar el tejido y rematar hebra.`,
         const btn = document.getElementById(`nav-${v}`);
         if (btn) btn.className = "flex flex-col items-center gap-1 text-neutral-400 dark:text-neutral-500 font-medium transition-all-300";
       });
-
+      
       const activeNavBtn = document.getElementById(`nav-${viewName === 'active-project' ? 'projects' : viewName}`);
       if (activeNavBtn) activeNavBtn.className = "flex flex-col items-center gap-1 text-crochet-accent font-semibold transition-all-300";
 
@@ -606,18 +672,18 @@ Cerrar el tejido y rematar hebra.`,
       const toast = document.getElementById('toast');
       const toastText = document.getElementById('toast-text');
       if (!toast || !toastText) return;
-
+      
       toastText.innerText = message;
       toast.classList.remove('translate-y-10', 'opacity-0', 'pointer-events-none');
       toast.classList.add('translate-y-0', 'opacity-100');
-
+      
       setTimeout(() => {
         toast.classList.add('translate-y-10', 'opacity-0', 'pointer-events-none');
         toast.classList.remove('translate-y-0', 'opacity-100');
       }, 2500);
     }
 
-    // VISTA 1: MIS PROYECTOS / PATRONES
+    // VISTA 1: MIS PATRONES
     function renderProjectsView(container) {
       container.innerHTML = `
         <div class="flex-1 flex flex-col">
@@ -642,7 +708,7 @@ Cerrar el tejido y rematar hebra.`,
           <div class="flex flex-col items-center justify-center py-16 text-center px-4 bg-white dark:bg-neutral-800 rounded-2xl border border-dashed border-crochet-200 dark:border-neutral-700">
             <div class="text-4xl mb-2">🧶</div>
             <p class="text-sm font-semibold text-neutral-600 dark:text-neutral-300">No tienes patrones guardados</p>
-            <p class="text-xs text-neutral-400 dark:text-neutral-500 mt-1">¡Añade un nuevo patrón o sincroniza con tu Google Sheet para empezar!</p>
+            <p class="text-xs text-neutral-400 dark:text-neutral-500 mt-1">¡Añade un nuevo patrón o descárgalos de tu Google Sheet para empezar!</p>
           </div>
         `;
         return;
@@ -658,11 +724,11 @@ Cerrar el tejido y rematar hebra.`,
 
         const card = document.createElement('div');
         card.className = `p-4 rounded-2xl border transition-all-300 cursor-pointer ${
-          isSelected
-            ? 'bg-white dark:bg-neutral-800 border-crochet-accent shadow-md ring-1 ring-crochet-accent'
+          isSelected 
+            ? 'bg-white dark:bg-neutral-800 border-crochet-accent shadow-md ring-1 ring-crochet-accent' 
             : 'bg-white dark:bg-neutral-800 border-neutral-200 dark:border-neutral-700/80 hover:border-crochet-300 shadow-sm'
         }`;
-
+        
         card.innerHTML = `
           <div class="flex justify-between items-start mb-2" onclick="selectAndOpenProject('${proj.id}')">
             <div class="flex-1 min-w-0 pr-2">
@@ -679,7 +745,7 @@ Cerrar el tejido y rematar hebra.`,
 
           <div onclick="selectAndOpenProject('${proj.id}')">
             <div class="text-xs text-neutral-500 dark:text-neutral-400 mb-3 line-clamp-2">
-              <span class="font-semibold text-crochet-600 dark:text-crochet-300">Vuelta ${proj.currentRowIndex + 1}:</span>
+              <span class="font-semibold text-crochet-600 dark:text-crochet-300">Vuelta ${proj.currentRowIndex + 1}:</span> 
               <span class="italic text-neutral-600 dark:text-neutral-300">"${currentInstruction}"</span>
             </div>
 
@@ -706,11 +772,11 @@ Cerrar el tejido y rematar hebra.`,
 
     function deleteProject(event, id) {
       event.stopPropagation();
-      if (confirm('¿Quieres eliminar este patrón?')) {
+      if (confirm('¿Quieres eliminar este patrón de este dispositivo?')) {
         projects = projects.filter(p => p.id !== id);
         if (activeProjectId === id) activeProjectId = projects.length > 0 ? projects[0].id : null;
         saveToStorage();
-        syncWithCloud(true);
+        uploadToCloud(true);
         showToast('Patrón eliminado');
         switchView('projects');
       }
@@ -726,7 +792,7 @@ Cerrar el tejido y rematar hebra.`,
               ✨ Prompt IA
             </button>
           </div>
-
+          
           <div class="mb-3">
             <label class="block text-xs font-bold text-neutral-500 dark:text-neutral-400 uppercase mb-1">Nombre del Proyecto</label>
             <input type="text" id="proj-name" placeholder="Ej: Manta Sofá o Gorro Lana" class="w-full px-3 py-2 border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-750 text-neutral-800 dark:text-white rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-crochet-accent">
@@ -740,7 +806,7 @@ Cerrar el tejido y rematar hebra.`,
 
           <div class="mb-3 flex-1 flex flex-col">
             <label class="block text-xs font-bold text-neutral-500 dark:text-neutral-400 uppercase mb-1">Texto del Patrón</label>
-            <textarea id="proj-pattern" placeholder="Pega tu patrón aquí lineas por linea...&#10;Vta 1: Anillo mágico 6 pb&#10;Vta 2: 6 aum (12)" class="w-full flex-1 min-h-[140px] p-3 border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-750 text-neutral-800 dark:text-white rounded-xl text-xs font-mono focus:outline-none focus:ring-2 focus:ring-crochet-accent resize-none no-scrollbar"></textarea>
+            <textarea id="proj-pattern" placeholder="Pega tu patrón aquí linea por linea...&#10;Vta 1: Anillo mágico 6 pb&#10;Vta 2: 6 aum (12)" class="w-full flex-1 min-h-[140px] p-3 border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-750 text-neutral-800 dark:text-white rounded-xl text-xs font-mono focus:outline-none focus:ring-2 focus:ring-crochet-accent resize-none no-scrollbar"></textarea>
           </div>
 
           <div class="mb-4">
@@ -781,8 +847,8 @@ Cerrar el tejido y rematar hebra.`,
       projects.push(newProj);
       activeProjectId = newProj.id;
       saveToStorage();
-      syncWithCloud(true);
-
+      uploadToCloud(true);
+      
       showToast('🎉 ¡Patrón guardado correctamente!');
       switchView('active-project');
     }
@@ -794,7 +860,7 @@ Cerrar el tejido y rematar hebra.`,
       if (file.type === 'application/pdf') {
         const loadingEl = document.getElementById('pdf-loading');
         if (loadingEl) loadingEl.classList.remove('hidden');
-
+        
         try {
           const arrayBuffer = await file.arrayBuffer();
           const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
@@ -843,14 +909,14 @@ Cerrar el tejido y rematar hebra.`,
 
       const totalRows = proj.parsedRows.length;
       const progressPercent = totalRows > 0 ? Math.round((proj.currentRowIndex / totalRows) * 100) : 0;
-
+      
       const prevInstruction = proj.currentRowIndex > 0 ? proj.parsedRows[proj.currentRowIndex - 1] : null;
       const currentInstruction = totalRows > 0 ? proj.parsedRows[proj.currentRowIndex] : '¡Felicidades, patrón terminado! 🥳';
       const nextInstruction = proj.currentRowIndex < totalRows - 1 ? proj.parsedRows[proj.currentRowIndex + 1] : null;
 
       container.innerHTML = `
         <div class="flex-1 flex flex-col justify-between h-[calc(100vh-140px)]">
-
+          
           <!-- Encabezado Patrón -->
           <div class="bg-white dark:bg-neutral-850 p-3 rounded-2xl border border-neutral-150 dark:border-neutral-800 shadow-sm flex items-center justify-between transition-colors">
             <button onclick="switchView('projects')" class="text-neutral-500 hover:text-crochet-accent p-1">
@@ -860,8 +926,8 @@ Cerrar el tejido y rematar hebra.`,
               <h2 class="font-bold text-neutral-800 dark:text-neutral-100 text-sm truncate">${proj.name}</h2>
               <p class="text-[10px] text-neutral-400 font-medium">Idioma: ${proj.language === 'en' ? 'Inglés 🇬🇧' : 'Español 🇪🇸'}</p>
             </div>
-            <!-- Lector de Voz Hands-Free -->
-            <button onclick="speakInstruction('${encodeURIComponent(currentInstruction)}')" id="speech-btn" class="p-2 rounded-xl bg-crochet-100 dark:bg-neutral-750 text-crochet-700 dark:text-crochet-300 hover:bg-crochet-200 transition-colors" title="Leer en voz alta">
+            <!-- Lector de Voz -->
+            <button onclick="speakInstruction('${encodeURIComponent(currentInstruction)}')" class="p-2 rounded-xl bg-crochet-100 dark:bg-neutral-750 text-crochet-700 dark:text-crochet-300 hover:bg-crochet-200 transition-colors" title="Leer en voz alta">
               🔊
             </button>
           </div>
@@ -947,8 +1013,11 @@ Cerrar el tejido y rematar hebra.`,
       if (newIndex >= 0 && newIndex <= proj.parsedRows.length) {
         proj.currentRowIndex = newIndex;
         proj.currentStitchCount = 0;
+        
+        // Guardado local instantáneo + sync fluida en segundo plano
         saveToStorage();
-        syncWithCloud(true);
+        syncProgressInBackground(proj.id, proj.currentRowIndex, proj.currentStitchCount);
+        
         switchView('active-project');
       }
     }
@@ -956,13 +1025,16 @@ Cerrar el tejido y rematar hebra.`,
     function changeStitch(step) {
       const proj = projects.find(p => p.id === activeProjectId);
       if (!proj) return;
-
+      
       const newStitches = (proj.currentStitchCount || 0) + step;
       if (newStitches >= 0) {
         proj.currentStitchCount = newStitches;
         saveToStorage();
+        
         const countVal = document.getElementById('stitch-count-val');
         if (countVal) countVal.innerText = newStitches;
+        
+        syncProgressInBackground(proj.id, proj.currentRowIndex, proj.currentStitchCount);
       }
     }
 
@@ -973,6 +1045,7 @@ Cerrar el tejido y rematar hebra.`,
         saveToStorage();
         const countVal = document.getElementById('stitch-count-val');
         if (countVal) countVal.innerText = 0;
+        syncProgressInBackground(proj.id, proj.currentRowIndex, proj.currentStitchCount);
       }
     }
 
@@ -983,7 +1056,7 @@ Cerrar el tejido y rematar hebra.`,
           proj.currentRowIndex = 0;
           proj.currentStitchCount = 0;
           saveToStorage();
-          syncWithCloud(true);
+          syncProgressInBackground(proj.id, 0, 0);
           switchView('active-project');
         }
       }
@@ -995,35 +1068,25 @@ Cerrar el tejido y rematar hebra.`,
         return;
       }
 
-      if (isSpeaking) {
-        window.speechSynthesis.cancel();
-        isSpeaking = false;
-        return;
-      }
-
+      window.speechSynthesis.cancel();
       const text = decodeURIComponent(encodedText);
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.lang = 'es-ES';
       utterance.rate = 0.9;
 
-      utterance.onend = () => { isSpeaking = false; };
-      utterance.onerror = () => { isSpeaking = false; };
-
-      isSpeaking = true;
       window.speechSynthesis.speak(utterance);
       showToast('🔊 Leyendo instrucción...');
     }
 
-    // VISTA 4: GLOSARIO Y GUÍAS
+    // VISTA 4: GLOSARIO
     function renderGlossaryView(container) {
       container.innerHTML = `
         <div class="flex-1 flex flex-col h-[calc(100vh-140px)] overflow-y-auto no-scrollbar space-y-4">
           <div>
             <h2 class="text-lg font-bold text-neutral-700 dark:text-neutral-200">Glosario & Referencia</h2>
-            <p class="text-xs text-neutral-400">Guía de abreviaturas y medidas estándar.</p>
+            <p class="text-xs text-neutral-400">Guía de abreviaturas e instrucciones.</p>
           </div>
 
-          <!-- TABLA GLOSARIO -->
           <div class="bg-white dark:bg-neutral-800 p-3.5 rounded-2xl border border-neutral-200 dark:border-neutral-700 shadow-sm space-y-2">
             <h3 class="font-bold text-xs text-neutral-700 dark:text-neutral-200 uppercase tracking-wide border-b pb-1.5">Diccionario de Puntos</h3>
             <div class="space-y-2">
@@ -1034,22 +1097,6 @@ Cerrar el tejido y rematar hebra.`,
                     <span class="text-neutral-400">${item.abUs.toUpperCase()} (${item.us})</span>
                   </div>
                   <p class="text-[11px] text-neutral-500 mt-0.5">${item.desc}</p>
-                </div>
-              `).join('')}
-            </div>
-          </div>
-
-          <!-- TABLA GROSORES -->
-          <div class="bg-white dark:bg-neutral-800 p-3.5 rounded-2xl border border-neutral-200 dark:border-neutral-700 shadow-sm space-y-2">
-            <h3 class="font-bold text-xs text-neutral-700 dark:text-neutral-200 uppercase tracking-wide border-b pb-1.5">Grosores de Lana</h3>
-            <div class="space-y-1.5">
-              ${YARN_WEIGHTS.map(y => `
-                <div class="p-2 bg-neutral-50 dark:bg-neutral-750 rounded-xl text-xs flex justify-between items-center">
-                  <div>
-                    <span class="font-bold text-neutral-800 dark:text-neutral-200">${y.number}. ${y.category}</span>
-                    <p class="text-[10px] text-neutral-400">${y.name}</p>
-                  </div>
-                  <span class="font-semibold text-crochet-600 dark:text-crochet-300 text-[11px]">${y.mm}</span>
                 </div>
               `).join('')}
             </div>
