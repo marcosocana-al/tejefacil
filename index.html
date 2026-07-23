@@ -311,6 +311,7 @@
         ],
         currentRowIndex: 0,
         currentStitchCount: 0,
+        currentRepeatCount: 0,
         notes: 'Usar aguja de 3.0mm y lana de algodón.',
         language: 'es',
         dateCreated: Date.now() - 500000
@@ -334,6 +335,7 @@
       updateStretchTimerUI();
       initStretchMonitor();
       initVoices();
+      initKeyboardShortcuts();
 
       // Autodescarga silenciosa al abrir si hay conexión
       if (gasWebAppUrl && navigator.onLine) {
@@ -342,6 +344,43 @@
 
       switchView('projects');
     });
+
+    // ATAJOS DE TECLADO PARA ORDENADOR
+    function initKeyboardShortcuts() {
+      window.addEventListener('keydown', (e) => {
+        // Ignorar si el usuario está escribiendo en un input, textarea o modal
+        const tag = document.activeElement ? document.activeElement.tagName.toLowerCase() : '';
+        if (tag === 'input' || tag === 'textarea' || tag === 'select') return;
+
+        // Solo procesar atajos en la vista de tejer activa
+        if (currentView !== 'active-project') return;
+
+        switch (e.key) {
+          case 'ArrowUp':
+          case ' ': // Barra espaciadora suma puntos fácilmente
+            e.preventDefault();
+            changeStitch(1);
+            break;
+          case 'ArrowDown':
+            e.preventDefault();
+            changeStitch(-1);
+            break;
+          case 'ArrowRight':
+            e.preventDefault();
+            changeRow(1);
+            break;
+          case 'ArrowLeft':
+            e.preventDefault();
+            changeRow(-1);
+            break;
+          case 'r':
+          case 'R':
+            e.preventDefault();
+            changeRepeat(1);
+            break;
+        }
+      });
+    }
 
     // Carga de voces para sintetizador
     function initVoices() {
@@ -850,6 +889,7 @@
         parsedRows: parsedRows,
         currentRowIndex: 0,
         currentStitchCount: 0,
+        currentRepeatCount: 0,
         notes: notes || 'Sin notas especiales.',
         language: autoDetectLanguage(pattern),
         dateCreated: Date.now()
@@ -953,6 +993,7 @@ PATRÓN A LIMPIAR:
       }
 
       if (proj.currentStitchCount === undefined) proj.currentStitchCount = 0;
+      if (proj.currentRepeatCount === undefined) proj.currentRepeatCount = 0;
 
       const totalRows = proj.parsedRows.length;
       const progressPercent = totalRows > 0 ? Math.round((proj.currentRowIndex / totalRows) * 100) : 0;
@@ -962,7 +1003,7 @@ PATRÓN A LIMPIAR:
       const nextInstruction = proj.currentRowIndex < totalRows - 1 ? proj.parsedRows[proj.currentRowIndex + 1] : null;
 
       container.innerHTML = `
-        <div class="flex-1 flex flex-col justify-between h-[calc(100vh-140px)]">
+        <div class="flex-1 flex flex-col justify-between min-h-[calc(100vh-140px)] gap-2">
           
           <!-- Encabezado Patrón -->
           <div class="bg-white dark:bg-neutral-850 p-3 rounded-2xl border border-neutral-150 dark:border-neutral-800 shadow-sm flex items-center justify-between transition-colors">
@@ -980,7 +1021,7 @@ PATRÓN A LIMPIAR:
           </div>
 
           <!-- PANEL PASO A PASO -->
-          <div class="my-2 space-y-1.5">
+          <div class="space-y-1.5">
             <!-- Vuelta Anterior -->
             <div class="bg-white/50 dark:bg-neutral-800/40 text-neutral-400 text-[11px] py-1.5 px-3 rounded-xl border border-neutral-100 dark:border-neutral-800/60 italic truncate">
               <span class="font-bold text-[9px] uppercase">Anterior (Vta ${proj.currentRowIndex}):</span> ${prevInstruction || '-- Inicio --'}
@@ -1002,24 +1043,53 @@ PATRÓN A LIMPIAR:
             </div>
           </div>
 
-          <!-- CONTADOR AUXILIAR DE PUNTOS -->
-          <div class="bg-indigo-50 dark:bg-indigo-950/20 p-2.5 rounded-xl border border-indigo-100/80 dark:border-indigo-900/40 flex items-center justify-between">
-            <div>
-              <span class="text-[11px] font-bold text-indigo-700 dark:text-indigo-400 uppercase tracking-wide block">Contador de Puntos</span>
-              <span class="text-[9px] text-indigo-500">Puntos trabajados en esta vuelta</span>
+          <!-- CONTADORES AUXILIARES (PUNTOS Y REPETICIONES) -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            
+            <!-- CONTADOR AUXILIAR DE PUNTOS -->
+            <div class="bg-indigo-50 dark:bg-indigo-950/20 p-2.5 rounded-xl border border-indigo-100/80 dark:border-indigo-900/40 flex items-center justify-between">
+              <div>
+                <span class="text-[11px] font-bold text-indigo-700 dark:text-indigo-400 uppercase tracking-wide block">Puntos</span>
+                <span class="text-[9px] text-indigo-500">Puntos de la vuelta</span>
+              </div>
+              <div class="flex items-center gap-1">
+                <button onclick="changeStitch(-1)" class="w-8 h-8 rounded-lg bg-white dark:bg-neutral-800 text-indigo-700 dark:text-indigo-300 font-bold shadow border border-indigo-100 flex items-center justify-center active:scale-90">-</button>
+                <span class="w-10 text-center font-extrabold text-indigo-850 dark:text-indigo-200 text-sm" id="stitch-count-val">${proj.currentStitchCount}</span>
+                <button onclick="changeStitch(1)" class="w-8 h-8 rounded-lg bg-white dark:bg-neutral-800 text-indigo-700 dark:text-indigo-300 font-bold shadow border border-indigo-100 flex items-center justify-center active:scale-90">+</button>
+                <button onclick="resetStitchCount()" class="p-1 text-indigo-400 hover:text-indigo-600 ml-0.5" title="Reiniciar puntos">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 8H17"/></svg>
+                </button>
+              </div>
             </div>
-            <div class="flex items-center gap-1.5">
-              <button onclick="changeStitch(-1)" class="w-8 h-8 rounded-lg bg-white dark:bg-neutral-800 text-indigo-700 dark:text-indigo-300 font-bold shadow border border-indigo-100 flex items-center justify-center active:scale-90">-</button>
-              <span class="w-8 text-center font-extrabold text-indigo-850 dark:text-indigo-200 text-sm" id="stitch-count-val">${proj.currentStitchCount}</span>
-              <button onclick="changeStitch(1)" class="w-8 h-8 rounded-lg bg-white dark:bg-neutral-800 text-indigo-700 dark:text-indigo-300 font-bold shadow border border-indigo-100 flex items-center justify-center active:scale-90">+</button>
-              <button onclick="resetStitchCount()" class="p-1 text-indigo-400 hover:text-indigo-600 ml-1" title="Reiniciar puntos">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 8H17"/></svg>
-              </button>
+
+            <!-- CONTADOR AUXILIAR DE REPETICIONES -->
+            <div class="bg-amber-50 dark:bg-amber-950/20 p-2.5 rounded-xl border border-amber-100/80 dark:border-amber-900/40 flex items-center justify-between">
+              <div>
+                <span class="text-[11px] font-bold text-amber-700 dark:text-amber-400 uppercase tracking-wide block">Repeticiones</span>
+                <span class="text-[9px] text-amber-500">Secuencias x N</span>
+              </div>
+              <div class="flex items-center gap-1">
+                <button onclick="changeRepeat(-1)" class="w-8 h-8 rounded-lg bg-white dark:bg-neutral-800 text-amber-700 dark:text-amber-300 font-bold shadow border border-amber-100 flex items-center justify-center active:scale-90">-</button>
+                <span class="w-10 text-center font-extrabold text-amber-850 dark:text-amber-200 text-sm" id="repeat-count-val">${proj.currentRepeatCount}</span>
+                <button onclick="changeRepeat(1)" class="w-8 h-8 rounded-lg bg-white dark:bg-neutral-800 text-amber-700 dark:text-amber-300 font-bold shadow border border-amber-100 flex items-center justify-center active:scale-90">+</button>
+                <button onclick="resetRepeatCount()" class="p-1 text-amber-400 hover:text-amber-600 ml-0.5" title="Reiniciar repeticiones">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 8H17"/></svg>
+                </button>
+              </div>
             </div>
+
+          </div>
+
+          <!-- GUÍA RÁPIDA DE ATAJOS EN TECLADO (PC) -->
+          <div class="hidden sm:flex items-center justify-around bg-neutral-200/50 dark:bg-neutral-800/50 text-[10px] text-neutral-500 dark:text-neutral-400 py-1 px-3 rounded-lg font-mono">
+            <span><kbd class="bg-white dark:bg-neutral-700 px-1 rounded shadow-xs">Espacio</kbd> / <kbd class="bg-white dark:bg-neutral-700 px-1 rounded shadow-xs">↑</kbd> Punto +1</span>
+            <span><kbd class="bg-white dark:bg-neutral-700 px-1 rounded shadow-xs">↓</kbd> Punto -1</span>
+            <span><kbd class="bg-white dark:bg-neutral-700 px-1 rounded shadow-xs">R</kbd> Repetición +1</span>
+            <span><kbd class="bg-white dark:bg-neutral-700 px-1 rounded shadow-xs">→</kbd> Vuelta +1</span>
           </div>
 
           <!-- BARRA PROGRESO -->
-          <div class="bg-white dark:bg-neutral-800 p-2.5 rounded-2xl border border-neutral-200 dark:border-neutral-700 shadow-sm my-1">
+          <div class="bg-white dark:bg-neutral-800 p-2.5 rounded-2xl border border-neutral-200 dark:border-neutral-700 shadow-sm">
             <div class="flex justify-between items-center text-xs font-bold text-neutral-500 mb-0.5">
               <span>Progreso del Proyecto</span>
               <span class="text-crochet-accent">${progressPercent}%</span>
@@ -1059,9 +1129,10 @@ PATRÓN A LIMPIAR:
       const newIndex = proj.currentRowIndex + step;
       if (newIndex >= 0 && newIndex <= proj.parsedRows.length) {
         proj.currentRowIndex = newIndex;
+        // Al cambiar de vuelta reiniciamos contadores auxiliares de la vuelta
         proj.currentStitchCount = 0;
+        proj.currentRepeatCount = 0;
         
-        // Guardado local instantáneo + sync fluida en segundo plano
         saveToStorage();
         syncProgressInBackground(proj.id, proj.currentRowIndex, proj.currentStitchCount);
         
@@ -1096,12 +1167,37 @@ PATRÓN A LIMPIAR:
       }
     }
 
+    function changeRepeat(step) {
+      const proj = projects.find(p => p.id === activeProjectId);
+      if (!proj) return;
+      
+      const newRepeats = (proj.currentRepeatCount || 0) + step;
+      if (newRepeats >= 0) {
+        proj.currentRepeatCount = newRepeats;
+        saveToStorage();
+        
+        const countVal = document.getElementById('repeat-count-val');
+        if (countVal) countVal.innerText = newRepeats;
+      }
+    }
+
+    function resetRepeatCount() {
+      const proj = projects.find(p => p.id === activeProjectId);
+      if (proj) {
+        proj.currentRepeatCount = 0;
+        saveToStorage();
+        const countVal = document.getElementById('repeat-count-val');
+        if (countVal) countVal.innerText = 0;
+      }
+    }
+
     function resetRowCounter() {
       if (confirm('¿Reiniciar a la vuelta 1?')) {
         const proj = projects.find(p => p.id === activeProjectId);
         if (proj) {
           proj.currentRowIndex = 0;
           proj.currentStitchCount = 0;
+          proj.currentRepeatCount = 0;
           saveToStorage();
           syncProgressInBackground(proj.id, 0, 0);
           switchView('active-project');
@@ -1119,14 +1215,12 @@ PATRÓN A LIMPIAR:
       const text = decodeURIComponent(encodedText);
       if (!text) return;
 
-      // Si ya está reproduciendo, al pulsar de nuevo se detiene
       if (window.speechSynthesis.speaking) {
         window.speechSynthesis.cancel();
         showToast('⏹️ Lectura pausada');
         return;
       }
 
-      // Detener cualquier audio previo
       window.speechSynthesis.cancel();
 
       setTimeout(() => {
@@ -1135,7 +1229,6 @@ PATRÓN A LIMPIAR:
         utterance.rate = 0.95;
         utterance.pitch = 1.0;
 
-        // Intentar seleccionar voz en español disponible
         const voices = window.speechSynthesis.getVoices();
         const spanishVoice = voices.find(v => v.lang && (v.lang.startsWith('es') || v.lang.includes('Spanish')));
         if (spanishVoice) {
