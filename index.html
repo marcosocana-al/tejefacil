@@ -348,7 +348,7 @@
     // ATAJOS DE TECLADO PARA ORDENADOR
     function initKeyboardShortcuts() {
       window.addEventListener('keydown', (e) => {
-        // Ignorar si el usuario está escribiendo en un input, textarea o modal
+        // Ignorar si el usuario está escribiendo en un input, textarea o select
         const tag = document.activeElement ? document.activeElement.tagName.toLowerCase() : '';
         if (tag === 'input' || tag === 'textarea' || tag === 'select') return;
 
@@ -356,14 +356,16 @@
         if (currentView !== 'active-project') return;
 
         switch (e.key) {
+          case ' ': // Barra espaciadora suma REPETICIONES
+          case 'r':
+          case 'R':
           case 'ArrowUp':
-          case ' ': // Barra espaciadora suma puntos fácilmente
             e.preventDefault();
-            changeStitch(1);
+            changeRepeat(1);
             break;
           case 'ArrowDown':
             e.preventDefault();
-            changeStitch(-1);
+            changeRepeat(-1);
             break;
           case 'ArrowRight':
             e.preventDefault();
@@ -372,11 +374,6 @@
           case 'ArrowLeft':
             e.preventDefault();
             changeRow(-1);
-            break;
-          case 'r':
-          case 'R':
-            e.preventDefault();
-            changeRepeat(1);
             break;
         }
       });
@@ -1043,30 +1040,28 @@ PATRÓN A LIMPIAR:
             </div>
           </div>
 
-          <!-- CONTADORES AUXILIARES (PUNTOS Y REPETICIONES) -->
+          <!-- CONTADORES AUXILIARES (PUNTOS DIRECTOS Y REPETICIONES) -->
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
             
-            <!-- CONTADOR AUXILIAR DE PUNTOS -->
+            <!-- CAMPO ENTRADA DIRECTA DE PUNTOS -->
             <div class="bg-indigo-50 dark:bg-indigo-950/20 p-2.5 rounded-xl border border-indigo-100/80 dark:border-indigo-900/40 flex items-center justify-between">
               <div>
-                <span class="text-[11px] font-bold text-indigo-700 dark:text-indigo-400 uppercase tracking-wide block">Puntos</span>
-                <span class="text-[9px] text-indigo-500">Puntos de la vuelta</span>
+                <span class="text-[11px] font-bold text-indigo-700 dark:text-indigo-400 uppercase tracking-wide block">Nº de Puntos</span>
+                <span class="text-[9px] text-indigo-500">Escribe el punto en el que vas</span>
               </div>
               <div class="flex items-center gap-1">
-                <button onclick="changeStitch(-1)" class="w-8 h-8 rounded-lg bg-white dark:bg-neutral-800 text-indigo-700 dark:text-indigo-300 font-bold shadow border border-indigo-100 flex items-center justify-center active:scale-90">-</button>
-                <span class="w-10 text-center font-extrabold text-indigo-850 dark:text-indigo-200 text-sm" id="stitch-count-val">${proj.currentStitchCount}</span>
-                <button onclick="changeStitch(1)" class="w-8 h-8 rounded-lg bg-white dark:bg-neutral-800 text-indigo-700 dark:text-indigo-300 font-bold shadow border border-indigo-100 flex items-center justify-center active:scale-90">+</button>
-                <button onclick="resetStitchCount()" class="p-1 text-indigo-400 hover:text-indigo-600 ml-0.5" title="Reiniciar puntos">
+                <input type="number" min="0" id="stitch-count-val" value="${proj.currentStitchCount}" onchange="setCustomStitchCount(this.value)" oninput="setCustomStitchCount(this.value)" class="w-16 text-center font-extrabold text-indigo-900 dark:text-indigo-200 text-sm bg-white dark:bg-neutral-800 border border-indigo-200 dark:border-indigo-800 rounded-lg py-1 px-1 focus:ring-2 focus:ring-indigo-400 focus:outline-none">
+                <button onclick="resetStitchCount()" class="p-1 text-indigo-400 hover:text-indigo-600 ml-0.5" title="Reiniciar puntos a 0">
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 8H17"/></svg>
                 </button>
               </div>
             </div>
 
-            <!-- CONTADOR AUXILIAR DE REPETICIONES -->
+            <!-- CONTADOR AUXILIAR DE REPETICIONES (+1 CON ESPACIO) -->
             <div class="bg-amber-50 dark:bg-amber-950/20 p-2.5 rounded-xl border border-amber-100/80 dark:border-amber-900/40 flex items-center justify-between">
               <div>
                 <span class="text-[11px] font-bold text-amber-700 dark:text-amber-400 uppercase tracking-wide block">Repeticiones</span>
-                <span class="text-[9px] text-amber-500">Secuencias x N</span>
+                <span class="text-[9px] text-amber-500">Secuencias x N (Espacio)</span>
               </div>
               <div class="flex items-center gap-1">
                 <button onclick="changeRepeat(-1)" class="w-8 h-8 rounded-lg bg-white dark:bg-neutral-800 text-amber-700 dark:text-amber-300 font-bold shadow border border-amber-100 flex items-center justify-center active:scale-90">-</button>
@@ -1082,10 +1077,10 @@ PATRÓN A LIMPIAR:
 
           <!-- GUÍA RÁPIDA DE ATAJOS EN TECLADO (PC) -->
           <div class="hidden sm:flex items-center justify-around bg-neutral-200/50 dark:bg-neutral-800/50 text-[10px] text-neutral-500 dark:text-neutral-400 py-1 px-3 rounded-lg font-mono">
-            <span><kbd class="bg-white dark:bg-neutral-700 px-1 rounded shadow-xs">Espacio</kbd> / <kbd class="bg-white dark:bg-neutral-700 px-1 rounded shadow-xs">↑</kbd> Punto +1</span>
-            <span><kbd class="bg-white dark:bg-neutral-700 px-1 rounded shadow-xs">↓</kbd> Punto -1</span>
-            <span><kbd class="bg-white dark:bg-neutral-700 px-1 rounded shadow-xs">R</kbd> Repetición +1</span>
+            <span><kbd class="bg-white dark:bg-neutral-700 px-1 rounded shadow-xs">Espacio</kbd> / <kbd class="bg-white dark:bg-neutral-700 px-1 rounded shadow-xs">R</kbd> Repetición +1</span>
+            <span><kbd class="bg-white dark:bg-neutral-700 px-1 rounded shadow-xs">↑ / ↓</kbd> Repetición +/-</span>
             <span><kbd class="bg-white dark:bg-neutral-700 px-1 rounded shadow-xs">→</kbd> Vuelta +1</span>
+            <span><kbd class="bg-white dark:bg-neutral-700 px-1 rounded shadow-xs">←</kbd> Vuelta -1</span>
           </div>
 
           <!-- BARRA PROGRESO -->
@@ -1129,7 +1124,7 @@ PATRÓN A LIMPIAR:
       const newIndex = proj.currentRowIndex + step;
       if (newIndex >= 0 && newIndex <= proj.parsedRows.length) {
         proj.currentRowIndex = newIndex;
-        // Al cambiar de vuelta reiniciamos contadores auxiliares de la vuelta
+        // Al cambiar de vuelta reiniciamos contadores auxiliares
         proj.currentStitchCount = 0;
         proj.currentRepeatCount = 0;
         
@@ -1140,20 +1135,16 @@ PATRÓN A LIMPIAR:
       }
     }
 
-    function changeStitch(step) {
+    // Entrada manual directa de puntos
+    function setCustomStitchCount(value) {
       const proj = projects.find(p => p.id === activeProjectId);
       if (!proj) return;
+
+      const parsedVal = parseInt(value, 10);
+      proj.currentStitchCount = isNaN(parsedVal) || parsedVal < 0 ? 0 : parsedVal;
       
-      const newStitches = (proj.currentStitchCount || 0) + step;
-      if (newStitches >= 0) {
-        proj.currentStitchCount = newStitches;
-        saveToStorage();
-        
-        const countVal = document.getElementById('stitch-count-val');
-        if (countVal) countVal.innerText = newStitches;
-        
-        syncProgressInBackground(proj.id, proj.currentRowIndex, proj.currentStitchCount);
-      }
+      saveToStorage();
+      syncProgressInBackground(proj.id, proj.currentRowIndex, proj.currentStitchCount);
     }
 
     function resetStitchCount() {
@@ -1161,9 +1152,9 @@ PATRÓN A LIMPIAR:
       if (proj) {
         proj.currentStitchCount = 0;
         saveToStorage();
-        const countVal = document.getElementById('stitch-count-val');
-        if (countVal) countVal.innerText = 0;
-        syncProgressInBackground(proj.id, proj.currentRowIndex, proj.currentStitchCount);
+        const inputVal = document.getElementById('stitch-count-val');
+        if (inputVal) inputVal.value = 0;
+        syncProgressInBackground(proj.id, proj.currentRowIndex, 0);
       }
     }
 
